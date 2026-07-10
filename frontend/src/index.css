@@ -1,0 +1,61 @@
+/* 全局 — 企业员工助手 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #fdf6f6;
+  --surface: #ffffff;
+  --surface-hover: #f5eded;
+  --sidebar-bg: #f9ebeb;
+  --border: #e8dcdc;
+  --border-light: #f5efef;
+  --text: #1a1d23;
+  --text-secondary: #5f6b7a;
+  --text-muted: #8f99a8;
+  --accent: #dc2626;
+  --accent-light: #fce8e8;
+  --accent-glow: rgba(220,38,38,.10);
+  --user-bubble: #dc2626;
+  --user-bubble-text: #ffffff;
+  --assistant-bubble: #ffffff;
+  --assistant-bubble-border: #ebdfdf;
+  --coral: #ef4444;
+  --coral-light: #fee2e2;
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.08);
+  --transition: 200ms cubic-bezier(.4,0,.2,1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter','Noto Sans SC',-apple-system,sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(220,38,38,.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(239,68,68,.02) 0%, transparent 50%);
+}
+
+#root { height: 100vh; }
+
+/* 消息入场动画 */
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

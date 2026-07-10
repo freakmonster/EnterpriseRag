@@ -1,0 +1,5 @@
+{
+  "hy3-preview":        {"input": 0.004, "output": 0.012, "unit": "per_1k_tokens"},
+  "text-embedding-v2":  {"input": 0.0005, "output": 0.0,   "unit": "per_1k_tokens"},
+  "qwen3-vl-rerank":    {"input": 0.003, "output": 0.0,   "unit": "per_1k_tokens"}
+}
