@@ -70,7 +70,6 @@ envConfig*.txt
 .env.local
 
 # Backend runtime
-backend/static/
 backend/chroma_db/
 
 # Backend tests

@@ -33,6 +33,40 @@ npm run dev
 打开 `http://localhost:5173` 注册账号即可使用。
 
 ---
+
+## Docker 部署（推荐）
+
+无需安装任何环境，仅需 Docker：
+
+```bash
+# 1. 配置 API Key
+echo "DASHSCOPE_API_KEY=sk-xxx" >> .env
+echo "DEEPSEEK_API_KEY=sk-xxx" >> .env
+echo "DB_PASSWORD=your_password" >> .env
+
+# 2. 一键启动所有服务
+docker compose up -d
+
+# 3. 初始化数据库与知识库
+docker compose exec backend python -m infrastructure.database.init_db
+docker compose exec backend python -m retrieval.init_store
+```
+
+打开 `http://localhost` 即可使用。所有服务（MySQL、Redis、ES、FastAPI、Nginx）自动编排运行。
+
+**服务架构一览：**
+
+| 服务 | 默认端口 |
+|------|---------|
+| Nginx（前端）| 80 |
+| FastAPI（后端）| 8001 |
+| MySQL 8 | 3306 |
+| Redis 7 | 6379 |
+| Elasticsearch 8 | 9200 |
+
+如需部署到云服务器，只需在 `.env` 中设置好 API Key，`docker compose up -d` 后即可通过 `http://公网IP` 访问。
+
+---
 <img width="1043" height="517" alt="image" src="https://github.com/user-attachments/assets/d2e3e58d-bbd3-414b-a40a-d2555ed93db6" />
 
 <img width="1043" height="517" alt="image" src="https://github.com/user-attachments/assets/924ecf44-dc8a-474c-a569-ed2ef10e3509" />

@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     dashscope_embedding_model: str = "text-embedding-v2"
 
     # Java服务地址，用于Agent调用Java的内部API
-    java_service_url: str = "http://localhost:8080"
+    java_service_url: str = os.getenv("JAVA_SERVICE_URL", "http://localhost:8080")
 
     # ChromaDB向量库本地存储路径（绝对路径，基于项目根目录）
     chroma_db_path: str = str(PROJECT_ROOT / "chroma_db")
@@ -53,15 +53,15 @@ class Settings(BaseSettings):
     es_port: int = int(os.getenv("ES_PORT", "9200"))
 
     # MinIO配置
-    minio_host: str = "172.22.32.238:9000"
-    minio_access_key: str = "root"
-    minio_secret_key: str = "88888888"
-    minio_bucket_policies: str = "policies"
+    minio_host: str = os.getenv("MINIO_HOST", "localhost:9000")
+    minio_access_key: str = os.getenv("MINIO_ACCESS_KEY", "root")
+    minio_secret_key: str = os.getenv("MINIO_SECRET_KEY", "88888888")
+    minio_bucket_policies: str = os.getenv("MINIO_BUCKET_POLICIES", "policies")
 
     # Nacos 配置中心
-    nacos_host: str = "localhost:8848"
-    nacos_data_id: str = "policies-gray-config"
-    nacos_group: str = "DEFAULT_GROUP"
+    nacos_host: str = os.getenv("NACOS_HOST", "localhost:8848")
+    nacos_data_id: str = os.getenv("NACOS_DATA_ID", "policies-gray-config")
+    nacos_group: str = os.getenv("NACOS_GROUP", "DEFAULT_GROUP")
 
     # JWT 认证
     jwt_secret: str = os.getenv("JWT_SECRET", "employee-assistant-jwt-secret-key-2026")
