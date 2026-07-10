@@ -33,6 +33,10 @@ npm run dev
 打开 `http://localhost:5173` 注册账号即可使用。
 
 ---
+<img width="1043" height="517" alt="image" src="https://github.com/user-attachments/assets/d2e3e58d-bbd3-414b-a40a-d2555ed93db6" />
+
+<img width="1043" height="517" alt="image" src="https://github.com/user-attachments/assets/924ecf44-dc8a-474c-a569-ed2ef10e3509" />
+
 
 ## 系统架构
 
