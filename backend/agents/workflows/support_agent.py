@@ -198,11 +198,11 @@ async def chat_stream_impl(
                 yield f"data: {json.dumps({'type': 'citations', 'items': citation_items}, ensure_ascii=False)}\n\n"
 
             # ── 7. 持久化 ──────────────────────────────
-            assistant_msg = ChatHistory(session_id=session_id, user_id=userId, role="ASSISTANT", content=full_reply)
+            assistant_msg = ChatHistory(session_id=session_id, user_id=userId, role="ASSISTANT", content=full_reply, citations=citation_items if citation_items else None)
             mapper.save(assistant_msg)
-            # Redis 记忆：用户消息 + 助手回复
+            # Redis 记忆：用户消息 + 助手回复（含引用来源）
             redis_client.rpush(memory_key, json.dumps({"role": "USER", "content": message}, ensure_ascii=False))
-            redis_client.rpush(memory_key, json.dumps({"role": "ASSISTANT", "content": full_reply}, ensure_ascii=False))
+            redis_client.rpush(memory_key, json.dumps({"role": "ASSISTANT", "content": full_reply, "citations": citation_items}, ensure_ascii=False))
 
             # ── 8. 触发记忆压缩 ─────────────────────────
             if redis_client.llen(memory_key) > MEMORY_COMPRESS_THRESHOLD:

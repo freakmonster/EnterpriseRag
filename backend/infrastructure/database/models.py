@@ -1,5 +1,5 @@
 # 数据库模型
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, JSON, func
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -14,6 +14,7 @@ class ChatHistory(Base):
     user_id = Column(String(50), nullable=False)
     role = Column(String(20), nullable=False)
     content = Column(Text, nullable=False)
+    citations = Column(JSON, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 
