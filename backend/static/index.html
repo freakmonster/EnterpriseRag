@@ -3,225 +3,578 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LLM 成本追踪控制台</title>
+<title>模型运营 · 管理看板</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js">
 </script><script src="https://unpkg.com/chart.js@4/dist/chart.umd.min.js">
 </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ========== Design Tokens (matches frontend) ========== */
 :root {
-  --bg: #0b0f14;
-  --surface: #151a21;
-  --surface2: #1c232c;
-  --border: #252d38;
-  --text: #c8cdd4;
-  --text2: #8895a7;
-  --accent: #4da6ff;
+  --bg: #fdf6f6;
+  --surface: #ffffff;
+  --surface2: #f9ebeb;
+  --border: #e8dcdc;
+  --border-light: #f5efef;
+  --text: #1a1d23;
+  --text-secondary: #5f6b7a;
+  --text-muted: #8f99a8;
+  --accent: #dc2626;
+  --accent-light: #fce8e8;
+  --accent-glow: rgba(220,38,38,.10);
   --green: #2ecc71;
   --amber: #f0a040;
   --red: #e0556a;
-  --radius: 8px;
-  --shadow: 0 1px 3px rgba(0,0,0,.4);
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.08);
+  --transition: 200ms cubic-bezier(.4,0,.2,1);
 }
+
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: "PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
-.container { max-width:1440px; margin:0 auto; padding:20px 24px; }
+body {
+  font-family: "Inter","Noto Sans SC","Helvetica Neue",sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
 
-/* Header */
-.topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
-.topbar h1 { font-size:18px; font-weight:600; letter-spacing:.5px; color:#e8ecf1; }
-.topbar h1 span { color:var(--accent); margin-right:6px; }
-.mode-switch { display:flex; background:var(--surface2); border-radius:6px; padding:2px; }
-.mode-switch button { padding:6px 18px; border:none; background:transparent; color:var(--text2); border-radius:5px; cursor:pointer; font-size:13px; transition:all .15s; }
-.mode-switch button.active { background:var(--accent); color:#fff; }
+/* ========== Layout ========== */
+.app { max-width: 1360px; margin: 0 auto; padding: 0 24px; }
 
-/* Toolbar */
-.toolbar { display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
-.toolbar label { font-size:12px; color:var(--text2); }
-.toolbar input[type=date], .toolbar select { padding:7px 10px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; color:var(--text); font-size:13px; }
-.toolbar input[type=date]:focus, .toolbar select:focus { outline:none; border-color:var(--accent); }
-.btn { padding:7px 18px; border:none; border-radius:5px; cursor:pointer; font-size:13px; font-weight:500; transition:all .15s; }
-.btn-primary { background:var(--accent); color:#fff; }
-.btn-primary:hover { filter:brightness(1.1); }
-.refresh-dot { width:6px; height:6px; border-radius:50%; background:var(--green); display:inline-block; animation:pulse 2s infinite; }
+/* ========== Top Navigation ========== */
+.topnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 60px;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.3px;
+}
+.topnav-brand .logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+.topnav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ========== Tabs ========== */
+.tab-group {
+  display: flex;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+.tab-group button {
+  padding: 7px 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+.tab-group button.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(220,38,38,.25);
+}
+
+/* ========== Toolbar ========== */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0 20px;
+  flex-wrap: wrap;
+}
+.toolbar label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.toolbar input[type=date] {
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color var(--transition);
+}
+.toolbar input[type=date]:focus { outline: none; border-color: var(--accent); }
+.toolbar select {
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color var(--transition);
+}
+.toolbar select:focus { outline: none; border-color: var(--accent); }
+.btn {
+  padding: 7px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(220,38,38,.2);
+}
+.btn-primary:hover { filter: brightness(1.08); box-shadow: 0 4px 16px rgba(220,38,38,.3); }
+.refresh-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.refresh-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-/* Stat cards */
-.stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:18px; }
-.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
-.stat-card .slabel { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
-.stat-card .svalue { font-size:26px; font-weight:700; color:#e8ecf1; }
-.stat-card .svalue.cost { color:var(--amber); }
+/* ========== Metric Cards ========== */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.metric-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  transition: box-shadow var(--transition);
+}
+.metric-card:hover { box-shadow: var(--shadow-lg); }
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 4px;
+}
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.metric-value.accent { color: var(--accent); }
+.metric-value.green { color: var(--green); }
+.metric-unit {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
 
-/* Layout */
-.main { display:flex; gap:14px; }
-.charts-area { flex:1; display:flex; flex-direction:column; gap:14px; min-width:0; }
-.sidebar { width:300px; flex-shrink:0; display:flex; flex-direction:column; gap:14px; }
+/* ========== Content Grid ========== */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.content-grid .full { grid-column: 1 / -1; }
 
-/* Panels */
-.panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; }
-.panel h3 { font-size:13px; font-weight:600; color:var(--text2); margin-bottom:14px; letter-spacing:.5px; text-transform:uppercase; }
-.panel .chart-wrap { position:relative; height:240px; }
-.panel .chart-wrap.short { height:180px; }
+/* ========== Panels ========== */
+.panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  letter-spacing: .3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.panel-title .dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.chart-wrap { position: relative; height: 220px; }
+.chart-wrap.tall { height: 260px; }
 
-/* Info rows */
-.info-row { display:flex; justify-content:space-between; padding:5px 0; font-size:12px; border-bottom:1px solid var(--border); }
-.info-row:last-child { border-bottom:none; }
-.info-row .ik { color:var(--text2); }
-.info-row .iv { font-weight:600; font-variant-numeric:tabular-nums; }
+/* ========== Aggregation Cards ========== */
+.agg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.agg-card {
+  padding: 14px 16px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+}
+.agg-card .alabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  letter-spacing: .3px;
+}
+.agg-card .avalue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+.agg-card .asub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
 
-/* Quota form */
-.qform { display:flex; flex-direction:column; gap:10px; }
-.qform select { padding:7px 10px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; color:var(--text); font-size:13px; }
-.qform .qfield label { display:block; font-size:11px; color:var(--text2); margin-bottom:3px; }
-.qform .qfield input { width:100%; padding:7px 10px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; color:var(--text); font-size:13px; }
-.qform .qfield input:focus { outline:none; border-color:var(--accent); }
-.qbtns { display:flex; gap:8px; }
-.qbtns button { flex:1; padding:7px 0; border:none; border-radius:5px; cursor:pointer; font-size:12px; font-weight:500; }
-.q-save { background:var(--accent); color:#fff; }
-.q-reset { background:var(--red); color:#fff; }
-.q-msg { font-size:11px; min-height:16px; }
-.q-msg.ok { color:var(--green); }
-.q-msg.err { color:var(--red); }
-.q-source { display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px; font-weight:600; }
-.q-source.default { background:#252d38; color:var(--text2); }
-.q-source.custom { background:rgba(77,166,255,.15); color:var(--accent); }
+/* ========== Quota Section ========== */
+.quota-section {
+  margin-top: 0;
+  padding: 0;
+}
+.quota-toggle {
+  width: 100%;
+  padding: 14px 22px;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all var(--transition);
+}
+.quota-toggle:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+.quota-toggle .arrow {
+  transition: transform var(--transition);
+  font-size: 12px;
+}
+.quota-toggle .arrow.open { transform: rotate(180deg); }
+.quota-panel {
+  background: var(--surface);
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 0 22px 20px;
+  box-shadow: var(--shadow);
+  margin-top: -4px;
+}
+.quota-form { display: flex; flex-direction: column; gap: 12px; }
+.quota-form .row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.quota-form .field { flex: 1; min-width: 140px; }
+.quota-form .field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.quota-form .field input, .quota-form .field select {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color var(--transition);
+}
+.quota-form .field input:focus, .quota-form .field select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.quota-form .field .src-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.quota-form .field .src-tag.default { background: var(--border-light); color: var(--text-muted); }
+.quota-form .field .src-tag.custom { background: var(--accent-light); color: var(--accent); }
+.quota-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.quota-actions button {
+  padding: 8px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+.quota-save { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(220,38,38,.2); }
+.quota-save:hover { filter: brightness(1.08); box-shadow: 0 4px 16px rgba(220,38,38,.3); }
+.quota-reset { background: var(--border-light); color: var(--text-secondary); }
+.quota-reset:hover { background: var(--red); color: #fff; }
+.quota-msg { font-size: 11px; min-height: 16px; margin-top: 4px; }
+.quota-msg.ok { color: var(--green); }
+.quota-msg.err { color: var(--red); }
 
-/* Responsive */
-@media(max-width:1100px) { .main { flex-direction:column; } .sidebar { width:100%; } .stats { grid-template-columns:repeat(2,1fr); } }
+/* ========== Loading & Empty ========== */
+.loading-text { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 13px; }
+.empty-text { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 13px; }
+
+/* ========== Responsive ========== */
+@media(max-width:1200px) {
+  .metrics { grid-template-columns: repeat(3, 1fr); }
+  .content-grid { grid-template-columns: 1fr; }
+  .content-grid .full { grid-column: 1; }
+  .agg-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media(max-width:768px) {
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .topnav { padding: 0 16px; }
+  .app { padding: 0 12px; }
+  .agg-grid { grid-template-columns: 1fr; }
+  .quota-form .row { flex-direction: column; }
+}
 </style>
 </head>
 <body>
-<div id="app">
-<div class="container">
 
-  <!-- Top bar -->
-  <div class="topbar">
-    <h1><span>&#9632;</span>LLM 成本追踪控制台</h1>
-    <div class="mode-switch">
-      <button :class="{active:mode==='day'}" @click="switchMode('day')">日维度</button>
-      <button :class="{active:mode==='hour'}" @click="switchMode('hour')">小时维度</button>
+<div id="app">
+
+<!-- Top Navigation -->
+<div class="topnav">
+  <div class="topnav-brand">
+    <div class="logo">C</div>
+    <span>模型运营看板</span>
+  </div>
+  <div class="topnav-actions">
+    <div class="tab-group">
+      <button :class="{active:mode==='day'}" @click="switchMode('day')">趋势概览</button>
+      <button :class="{active:mode==='hour'}" @click="switchMode('hour')">实时监控</button>
     </div>
   </div>
+</div>
+
+<div class="app">
 
   <!-- Toolbar -->
   <div class="toolbar">
     <template v-if="mode==='day'">
-      <label>时间范围</label>
+      <label>日期范围</label>
       <input type="date" v-model="fromDate">
-      <span style="color:var(--text2)">—</span>
+      <span style="color:var(--text-muted);font-size:12px;">至</span>
       <input type="date" v-model="toDate">
-      <button class="btn btn-primary" @click="fetchAll">查询</button>
+      <button class="btn btn-primary" @click="fetchAll">刷新数据</button>
     </template>
     <template v-else>
-      <span style="color:var(--text2);font-size:13px;">最近 24 小时</span>
+      <span style="font-size:13px;color:var(--text-muted);">最近 24 小时数据</span>
+      <button class="btn btn-primary" @click="fetchAll">刷新数据</button>
     </template>
-    <label style="margin-left:12px;">自动刷新</label>
+    <div style="flex:1;"></div>
+    <label>自动刷新</label>
     <select v-model.number="refreshInterval" @change="setupTimer">
       <option :value="0">关闭</option>
       <option :value="15">15 秒</option>
       <option :value="30">30 秒</option>
       <option :value="60">60 秒</option>
     </select>
-    <span v-if="refreshInterval>0" class="refresh-dot" title="自动刷新中"></span>
-    <span v-if="countdown>0" style="font-size:11px;color:var(--text2);">{{ countdown }}s</span>
+    <span v-if="refreshInterval>0" class="refresh-indicator">
+      <span class="refresh-dot"></span>
+      {{ countdown }}s
+    </span>
   </div>
 
-  <!-- Stat cards -->
-  <div class="stats">
-    <div class="stat-card">
-      <div class="slabel">活跃用户</div>
-      <div class="svalue">{{ overview.active_users }}</div>
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-label">活跃用户</div>
+      <div class="metric-value accent">{{ overview.active_users }}</div>
     </div>
-    <div class="stat-card">
-      <div class="slabel">活跃会话</div>
-      <div class="svalue">{{ overview.active_sessions }}</div>
+    <div class="metric-card">
+      <div class="metric-label">活跃会话</div>
+      <div class="metric-value accent">{{ overview.active_sessions }}</div>
     </div>
-    <div class="stat-card">
-      <div class="slabel">总调用次数</div>
-      <div class="svalue">{{ overview.total_calls }}</div>
+    <div class="metric-card">
+      <div class="metric-label">总调用次数</div>
+      <div class="metric-value accent">{{ fmtNum(overview.total_calls) }}</div>
     </div>
-    <div class="stat-card">
-      <div class="slabel">总成本</div>
-      <div class="svalue cost">&yen;{{ overview.total_cost }}</div>
+    <div class="metric-card">
+      <div class="metric-label">总成本</div>
+      <div class="metric-value" :class="parseFloat(overview.total_cost)>0?'green':''">&yen;{{ overview.total_cost }}</div>
     </div>
-    <div class="stat-card">
-      <div class="slabel">平均延迟</div>
-      <div class="svalue">{{ overview.avg_latency_ms }}<span style="font-size:14px;color:var(--text2);">ms</span></div>
+    <div class="metric-card">
+      <div class="metric-label">平均延迟</div>
+      <div class="metric-value accent">{{ overview.avg_latency_ms }}<span class="metric-unit">ms</span></div>
     </div>
   </div>
 
-  <!-- Main content -->
-  <div class="main">
-    <!-- Charts -->
-    <div class="charts-area">
-      <template v-if="mode==='day'">
-        <div class="panel"><h3>每日成本趋势</h3><div class="chart-wrap"><canvas id="c_cost"></canvas></div></div>
-        <div class="panel"><h3>每日 Token 消耗</h3><div class="chart-wrap"><canvas id="c_token"></canvas></div></div>
-        <div class="panel"><h3>每日调用次数</h3><div class="chart-wrap"><canvas id="c_calls"></canvas></div></div>
-      </template>
-      <template v-else>
-        <div class="panel"><h3>每小时 Token 消耗</h3><div class="chart-wrap"><canvas id="c_htoken"></canvas></div></div>
-        <div class="panel"><h3>每小时调用次数</h3><div class="chart-wrap"><canvas id="c_hcalls"></canvas></div></div>
-      </template>
+  <!-- Charts Grid -->
+  <div class="content-grid">
+    <!-- Cost Trend (full width) -->
+    <div class="panel full">
+      <div class="panel-title"><span class="dot"></span>调用成本走势</div>
+      <div class="chart-wrap tall"><canvas id="c_cost"></canvas></div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <!-- Pie chart -->
-      <div class="panel">
-        <h3>模型成本占比</h3>
-        <div class="chart-wrap short"><canvas id="c_pie"></canvas></div>
-      </div>
+    <!-- Token Consumption -->
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Token 用量分布</div>
+      <div class="chart-wrap"><canvas id="c_token"></canvas></div>
+    </div>
 
-      <!-- Aggregation -->
-      <div class="panel">
-        <h3>时段汇总统计</h3>
-        <div class="info-row"><span class="ik">每用户平均调用</span><span class="iv">{{ agg.per_user.avg_calls }} 次</span></div>
-        <div class="info-row"><span class="ik">每用户平均输入</span><span class="iv">{{ fmtNum(agg.per_user.avg_input_tokens) }} tokens</span></div>
-        <div class="info-row"><span class="ik">每用户平均输出</span><span class="iv">{{ fmtNum(agg.per_user.avg_output_tokens) }} tokens</span></div>
-        <div class="info-row"><span class="ik">每用户平均成本</span><span class="iv">&yen;{{ agg.per_user.avg_cost }}</span></div>
-        <div class="info-row"><span class="ik">每用户平均延迟</span><span class="iv">{{ agg.per_user.avg_latency_ms }}ms</span></div>
-        <div style="height:8px;"></div>
-        <div class="info-row"><span class="ik">每会话平均调用</span><span class="iv">{{ agg.per_session.avg_calls }} 次</span></div>
-        <div class="info-row"><span class="ik">每会话平均输入</span><span class="iv">{{ fmtNum(agg.per_session.avg_input_tokens) }} tokens</span></div>
-        <div class="info-row"><span class="ik">每会话平均成本</span><span class="iv">&yen;{{ agg.per_session.avg_cost }}</span></div>
-        <div class="info-row"><span class="ik">每会话平均延迟</span><span class="iv">{{ agg.per_session.avg_latency_ms }}ms</span></div>
-      </div>
+    <!-- Calls Count / Pie -->
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>模型开销构成</div>
+      <div class="chart-wrap"><canvas id="c_pie"></canvas></div>
+    </div>
+  </div>
 
-      <!-- Quota management -->
-      <div class="panel">
-        <h3>配额管理</h3>
-        <div class="qform">
-          <select v-model="quotaRole" @change="loadQuota">
-            <option value="user">普通用户 (user)</option>
-            <option value="vip">VIP</option>
-          </select>
-          <div v-if="quotaData">
-            <div style="margin-bottom:10px;">
-              <span class="q-source" :class="quotaData.source">{{ quotaData.source==='custom' ? '自定义' : '系统默认' }}</span>
-            </div>
-            <div class="qfield">
-              <label>日请求上限</label>
-              <input type="number" v-model.number="quotaForm.daily_requests" min="1">
-            </div>
-            <div class="qfield">
-              <label>日 Token 上限</label>
-              <input type="number" v-model.number="quotaForm.daily_tokens" min="1">
-            </div>
-            <div class="qfield">
-              <label>每分钟请求上限 (RPM)</label>
-              <input type="number" v-model.number="quotaForm.rpm_requests" min="1">
-            </div>
-            <div class="qbtns" style="margin-top:10px;">
-              <button class="q-save" @click="saveQuota">保存并生效</button>
-              <button class="q-reset" @click="resetQuota">恢复默认</button>
-            </div>
-            <div class="q-msg" :class="quotaMsg.type">{{ quotaMsg.text }}</div>
-          </div>
+  <!-- Aggregation Cards -->
+  <div style="margin-bottom:14px;">
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>综合指标</div>
+      <div class="agg-grid">
+        <div class="agg-card">
+          <div class="alabel">人均调用</div>
+          <div class="avalue">{{ agg.per_user.avg_calls }}<span class="metric-unit">次</span></div>
+          <div class="asub">每会话 {{ agg.per_session.avg_calls }} 次</div>
+        </div>
+        <div class="agg-card">
+          <div class="alabel">人均输入 Token</div>
+          <div class="avalue">{{ fmtNum(agg.per_user.avg_input_tokens) }}<span class="metric-unit">tok</span></div>
+          <div class="asub">每会话 {{ fmtNum(agg.per_session.avg_input_tokens) }} tok</div>
+        </div>
+        <div class="agg-card">
+          <div class="alabel">人均成本</div>
+          <div class="avalue">&yen;{{ agg.per_user.avg_cost }}<span class="metric-unit"></span></div>
+          <div class="asub">每会话 &yen;{{ agg.per_session.avg_cost }}</div>
+        </div>
+        <div class="agg-card">
+          <div class="alabel">人均输出 Token</div>
+          <div class="avalue">{{ fmtNum(agg.per_user.avg_output_tokens) }}<span class="metric-unit">tok</span></div>
+          <div class="asub">每会话 {{ fmtNum(agg.per_session.avg_output_tokens) }} tok</div>
+        </div>
+        <div class="agg-card">
+          <div class="alabel">人均延迟</div>
+          <div class="avalue">{{ agg.per_user.avg_latency_ms }}<span class="metric-unit">ms</span></div>
+          <div class="asub">每会话 {{ agg.per_session.avg_latency_ms }} ms</div>
+        </div>
+        <div class="agg-card">
+          <div class="alabel">总调用次数</div>
+          <div class="avalue accent">{{ overview.total_calls }}<span class="metric-unit"></span></div>
+          <div class="asub">总成本 &yen;{{ overview.total_cost }}</div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Quota (Collapsible) -->
+  <div class="quota-section" style="margin-bottom:24px;">
+    <button class="quota-toggle" @click="quotaOpen=!quotaOpen">
+      <span>配额管理</span>
+      <span class="arrow" :class="{open:quotaOpen}">&#9660;</span>
+    </button>
+    <div v-if="quotaOpen" class="quota-panel">
+      <div class="quota-form">
+        <div class="row">
+          <div class="field" style="flex:0 0 200px;display:none;">
+            <label>角色</label>
+            <select v-model="quotaRole" @change="loadQuota">
+              <option value="user">普通用户 (user)</option>
+              <option value="vip">VIP</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>
+              日请求上限
+              <span v-if="quotaData" class="src-tag" :class="quotaData.source">{{ quotaData.source==='custom'?'自定义':'系统默认' }}</span>
+            </label>
+            <input type="number" v-model.number="quotaForm.daily_requests" min="1">
+          </div>
+          <div class="field">
+            <label>日 Token 上限</label>
+            <input type="number" v-model.number="quotaForm.daily_tokens" min="1">
+          </div>
+          <div class="field">
+            <label>每分钟请求上限 (RPM)</label>
+            <input type="number" v-model.number="quotaForm.rpm_requests" min="1">
+          </div>
+        </div>
+        <div class="quota-actions" style="justify-content:flex-end;">
+          <button class="quota-reset" @click="resetQuota">重置配置</button>
+          <button class="quota-save" @click="saveQuota">应用变更</button>
+        </div>
+        <div class="quota-msg" :class="quotaMsg.type">{{ quotaMsg.text }}</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -240,11 +593,12 @@ createApp({
       countdown: 0,
       _timer: null,
       _countdownTimer: null,
+      quotaOpen: false,
 
-      overview: { active_users:0, active_sessions:0, total_calls:0, total_cost:0 },
+      overview: { active_users:0, active_sessions:0, total_calls:0, total_cost:0, avg_latency_ms:0 },
       agg: {
-        per_user: { avg_calls:0, avg_input_tokens:0, avg_output_tokens:0, avg_cost:0 },
-        per_session: { avg_calls:0, avg_input_tokens:0, avg_cost:0 }
+        per_user: { avg_calls:0, avg_input_tokens:0, avg_output_tokens:0, avg_cost:0, avg_latency_ms:0 },
+        per_session: { avg_calls:0, avg_input_tokens:0, avg_output_tokens:0, avg_cost:0, avg_latency_ms:0 }
       },
       dayData: [],
       hourData: [],
@@ -260,9 +614,10 @@ createApp({
 
   methods: {
     fmtNum(v) {
+      if (v == null) return '0';
       if (v >= 1000000) return (v/1000000).toFixed(1)+'M';
       if (v >= 1000) return (v/1000).toFixed(1)+'K';
-      return String(v);
+      return String(Math.round(v));
     },
 
     async fetchAll() {
@@ -331,12 +686,12 @@ createApp({
           maintainAspectRatio: false,
           interaction: { mode:'index', intersect:false },
           plugins: {
-            legend: { position:'bottom', labels:{ boxWidth:10, padding:15, color:'#8895a7', font:{size:11}, usePointStyle:true } },
-            tooltip: { backgroundColor:'#1c232c', titleColor:'#e8ecf1', bodyColor:'#c8cdd4', borderColor:'#252d38', borderWidth:1 }
+            legend: { position:'bottom', labels:{ boxWidth:10, padding:15, color:'#5f6b7a', font:{size:11, family:'Inter,"Noto Sans SC"'}, usePointStyle:true } },
+            tooltip: { backgroundColor:'#ffffff', titleColor:'#1a1d23', bodyColor:'#5f6b7a', borderColor:'#e8dcdc', borderWidth:1, cornerRadius:8, padding:10 }
           },
           scales: {
-            x: { grid:{ color:'#1c232c' }, ticks:{ color:'#8895a7', font:{size:10}, maxRotation:45 } },
-            y: { grid:{ color:'#1c232c' }, ticks:{ color:'#8895a7', font:{size:10}, beginAtZero:true } }
+            x: { grid:{ color:'#f5efef' }, ticks:{ color:'#8f99a8', font:{size:10, family:'Inter,"Noto Sans SC"'}, maxRotation:45 } },
+            y: { grid:{ color:'#f5efef' }, ticks:{ color:'#8f99a8', font:{size:10, family:'Inter,"Noto Sans SC"'}, beginAtZero:true, callback:v=>v>=1000?(v/1000)+'K':v } }
           }
         }
       });
@@ -348,14 +703,14 @@ createApp({
       if (!ctx) return;
       this._charts[id] = new Chart(ctx, {
         type: 'doughnut',
-        data: { labels, datasets: [{ data, backgroundColor: bgColors, borderColor:'#151a21', borderWidth:2 }] },
+        data: { labels, datasets: [{ data, backgroundColor: bgColors, borderColor:'#ffffff', borderWidth:3 }] },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '65%',
+          cutout: '68%',
           plugins: {
-            legend: { position:'bottom', labels:{ boxWidth:10, padding:12, color:'#8895a7', font:{size:11}, usePointStyle:true } },
-            tooltip: { backgroundColor:'#1c232c', titleColor:'#e8ecf1', bodyColor:'#c8cdd4', borderColor:'#252d38', borderWidth:1 }
+            legend: { position:'bottom', labels:{ boxWidth:10, padding:12, color:'#5f6b7a', font:{size:11, family:'Inter,"Noto Sans SC"'}, usePointStyle:true } },
+            tooltip: { backgroundColor:'#ffffff', titleColor:'#1a1d23', bodyColor:'#5f6b7a', borderColor:'#e8dcdc', borderWidth:1, cornerRadius:8, padding:10 }
           }
         }
       });
@@ -363,35 +718,26 @@ createApp({
 
     renderCharts() {
       const types = ['chat','embedding','rerank'];
-      const colors = { chat:'#4da6ff', embedding:'#2ecc71', rerank:'#f0a040' };
+      const colors = { chat:'#dc2626', embedding:'#2ecc71', rerank:'#f0a040' };
+      const accentBg = 'rgba(220,38,38,.08)';
 
       if (this.mode === 'day') {
         const labels = this.dayData.map(d => d.date);
 
-        // Cost trend
-        this.makeLine('c_cost', labels, types.map(t => ({
-          label: t,
-          data: this.dayData.map(d => (d.models[t]||{}).cost||0),
-          borderColor: colors[t],
-          backgroundColor: colors[t]+'20',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 2,
-          pointHoverRadius: 5
-        })));
-
-        // Token trend
-        this.makeLine('c_token', labels, [
-          { label:'输入 Token', data:this.dayData.map(d => { let s=0; types.forEach(t=>s+=(d.models[t]||{}).input_tokens||0); return s; }), borderColor:'#4da6ff', tension:0.3, pointRadius:2 },
-          { label:'输出 Token', data:this.dayData.map(d => { let s=0; types.forEach(t=>s+=(d.models[t]||{}).output_tokens||0); return s; }), borderColor:'#2ecc71', tension:0.3, pointRadius:2 }
+        // Cost trend - single line with total cost
+        const totalCost = this.dayData.map(d => {
+          let s=0; types.forEach(t=>s+=(d.models[t]||{}).cost||0); return s;
+        });
+        this.makeLine('c_cost', labels, [
+          { label:'总成本', data: totalCost, borderColor:'#dc2626', backgroundColor: accentBg, fill: true, tension: 0.3, pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor:'#dc2626' }
         ]);
 
-        // Calls trend
-        this.makeLine('c_calls', labels, types.map(t => ({
+        // Token consumption - stacked area style
+        this.makeLine('c_token', labels, types.map(t => ({
           label: t,
-          data: this.dayData.map(d => (d.models[t]||{}).calls||0),
+          data: this.dayData.map(d => (d.models[t]||{}).input_tokens||0),
           borderColor: colors[t],
-          backgroundColor: colors[t]+'20',
+          backgroundColor: colors[t]+'18',
           fill: true,
           tension: 0.3,
           pointRadius: 2,
@@ -401,26 +747,22 @@ createApp({
       } else {
         const labels = this.hourData.map(h => h.hour.slice(11));
 
-        // Hourly token
-        this.makeLine('c_htoken', labels, [
-          { label:'输入 Token', data:this.hourData.map(h => { let s=0; types.forEach(t=>s+=(h.models[t]||{}).input_tokens||0); return s; }), borderColor:'#4da6ff', tension:0.3, pointRadius:2 },
-          { label:'输出 Token', data:this.hourData.map(h => { let s=0; types.forEach(t=>s+=(h.models[t]||{}).output_tokens||0); return s; }), borderColor:'#2ecc71', tension:0.3, pointRadius:2 }
+        // Hourly cost
+        const hTotal = this.hourData.map(h => {
+          let s=0; types.forEach(t=>s+=(h.models[t]||{}).cost||0); return s;
+        });
+        this.makeLine('c_cost', labels, [
+          { label:'成本', data: hTotal, borderColor:'#dc2626', backgroundColor: accentBg, fill: true, tension: 0.3, pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor:'#dc2626' }
         ]);
 
-        // Hourly calls
-        this.makeLine('c_hcalls', labels, types.map(t => ({
-          label: t,
-          data: this.hourData.map(h => (h.models[t]||{}).calls||0),
-          borderColor: colors[t],
-          backgroundColor: colors[t]+'20',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 2,
-          pointHoverRadius: 5
-        })));
+        // Hourly tokens
+        this.makeLine('c_token', labels, [
+          { label:'输入', data: this.hourData.map(h => { let s=0; types.forEach(t=>s+=(h.models[t]||{}).input_tokens||0); return s; }), borderColor:'#dc2626', tension: 0.3, pointRadius: 2, backgroundColor:'rgba(220,38,38,.08)', fill: true },
+          { label:'输出', data: this.hourData.map(h => { let s=0; types.forEach(t=>s+=(h.models[t]||{}).output_tokens||0); return s; }), borderColor:'#2ecc71', tension: 0.3, pointRadius: 2 }
+        ]);
       }
 
-      // Pie chart (always render)
+      // Doughnut (always render)
       const pieLabels = [], pieData = [], pieBg = [];
       const items = this.mode === 'day' ? this.dayData : this.hourData;
       const totals = {};
@@ -430,7 +772,7 @@ createApp({
       types.forEach(t => {
         if (totals[t] > 0) { pieLabels.push(t); pieData.push(totals[t]); pieBg.push(colors[t]); }
       });
-      if (pieData.length === 0) { pieLabels.push('无数据'); pieData.push(1); pieBg.push('#252d38'); }
+      if (pieData.length === 0) { pieLabels.push('无数据'); pieData.push(1); pieBg.push('#e8dcdc'); }
       this.makeDoughnut('c_pie', pieLabels, pieData, pieBg);
     },
 

@@ -2,6 +2,14 @@
 
 **FastAPI + LangGraph + React** · **ChromaDB + Elasticsearch** · **DeepSeek + DashScope**
 
+---
+
+### 亮点
+
+- **ReAct Agent 自主决策**：LLM 自主选择 3 种检索策略，支持多轮重试检索，非简单串行 RAG
+- **混合检索 + Rerank 精排**：向量语义 + BM25 关键词 + IK 中文分词，DashScope Rerank 二次排序
+- **引用来源防幻觉**：后端自动注入引用映射表，回答标注 `[n]` 上标 + 引用卡片，点击跳转高亮
+- **全链路成本追踪**：LLM / Embedding / Rerank 每次调用记录 Token、延迟、成本 + 角色配额管控
 
 ---
 
@@ -25,7 +33,10 @@ $env:ES_HOST = "localhost"
 # 3. 启动后端
 python app.py
 
-# 4. 启动前端（新终端）
+- 后端 ： http://localhost:8001
+- 管理看板 ： http://localhost:8001/dashboard
+
+# 4. 启动前端
 cd ../frontend
 npm run dev
 ```
