@@ -341,7 +341,7 @@
 
 /* Message Bubble */
 .msg-bubble {
-  max-width: 68%;
+  max-width: 100%;
   padding: 12px 18px;
   border-radius: var(--radius);
   font-size: 14px;
@@ -358,7 +358,8 @@
 }
 
 .msg-bubble.assistant {
-  background: var(--assistant-bubble);
+  max-width: 100%;
+  background: var(--assistant-bubble); /* trigger re-parse */
   color: var(--text);
   border: 1px solid var(--assistant-bubble-border);
   border-bottom-left-radius: 6px;
@@ -492,7 +493,7 @@
   display: flex;
   align-items: flex-end;
   gap: 12px;
-  padding: 24px 28px 12px;
+  padding: 8px 20px 1px;
   border-top: 1px solid var(--border-light);
   background: var(--bg);
 }
@@ -611,7 +612,7 @@
   background: rgba(0, 0, 0, 0.025);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
-  max-width: 68%;
+  max-width: 100%;
 }
 
 .citation-card-title {
