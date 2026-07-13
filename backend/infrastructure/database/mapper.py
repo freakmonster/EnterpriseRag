@@ -58,14 +58,17 @@ class ChatHistoryMapper(BaseMapper):
         ).scalars().all()
 
     def list_session_ids_by_user_id(self, user_id: str):
-        """获取用户的会话ID列表，按最后消息时间倒序"""
+        """获取用户的会话ID列表及标题，按最后消息时间倒序
+        Returns: list of (session_id, title) tuples
+        """
         from infrastructure.database.models import ChatHistory
         from sqlalchemy import func
 
         subquery = (
             select(
                 ChatHistory.session_id,
-                func.max(ChatHistory.created_at).label("last_time")
+                func.max(ChatHistory.created_at).label("last_time"),
+                func.max(ChatHistory.title).label("title")
             )
             .where(ChatHistory.user_id == user_id)
             .group_by(ChatHistory.session_id)
@@ -73,6 +76,6 @@ class ChatHistoryMapper(BaseMapper):
         )
 
         return self.db.execute(
-            select(subquery.c.session_id)
+            select(subquery.c.session_id, subquery.c.title)
             .order_by(desc(subquery.c.last_time))
-        ).scalars().all()
+        ).all()

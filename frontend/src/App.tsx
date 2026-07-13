@@ -1,5 +1,5 @@
 import { CopyOutlined, LeftOutlined, LogoutOutlined, PauseCircleOutlined, PlusOutlined, RedoOutlined, RightOutlined, SendOutlined } from '@ant-design/icons'
-import { Button, Dropdown, Input, List, Spin, message } from 'antd'
+import { Button, Dropdown, Input, List, message } from 'antd'
 import type React from 'react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
@@ -383,7 +383,12 @@ function App() {
                   <div className="msg-bubble assistant">
                     {renderContent(msg)}
                     {loading && msg.content === '' && (
-                      <Spin size="small" />
+                      <div className="loading-bubble">
+                        <div className="dot-pulse">
+                          <span /><span /><span />
+                        </div>
+                        <span>正在思考</span>
+                      </div>
                     )}
                   </div>
                   {/* 引用来源卡片 */}

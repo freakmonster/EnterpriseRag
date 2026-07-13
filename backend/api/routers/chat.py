@@ -42,7 +42,7 @@ def get_sessions(user_id: str = Depends(get_current_user)):
     sessions = mapper.list_session_ids_by_user_id(user_id)
     db.close()
     result = []
-    for sid in sessions:
-        title = redis_client.get(f"session_title:{sid}")
-        result.append({"session_id": sid, "title": title or sid})
+    for sid, db_title in sessions:
+        title = db_title or redis_client.get(f"session_title:{sid}") or sid
+        result.append({"session_id": sid, "title": title})
     return result

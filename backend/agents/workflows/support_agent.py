@@ -158,7 +158,10 @@ async def chat_stream_impl(
         "session_id": session_id,
     }
 
-    user_msg = ChatHistory(session_id=session_id, user_id=userId, role="USER", content=message)
+    user_msg = ChatHistory(
+        session_id=session_id, user_id=userId, role="USER", content=message,
+        title=title if not sessionId else None  # 仅新建会话时写入标题
+    )
     mapper = ChatHistoryMapper(db)
     mapper.save(user_msg)
 
