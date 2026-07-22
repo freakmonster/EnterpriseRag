@@ -25,7 +25,7 @@ from langgraph.graph import StateGraph, END
 from agents.state.state import AgentState
 from agents.nodes.agent_node import agent_node, tool_node, should_continue
 
-from tools.citation import init_citation_ctx, get_citation_ctx
+from tools.citation import init_storage, get_storage, cleanup_storage, set_session_key
 
 
 def create_agent_graph():
@@ -51,36 +51,36 @@ def create_agent_graph():
 agent_graph = create_agent_graph()
 
 
-def _build_citations(full_reply: str) -> list:
-    """从 LLM 回答中解析引用编号，从 citation_map 提取元数据，生成引用来源列表。
+def _build_citations(full_reply: str, storage_key: str) -> list:
+    """从 LLM 回答中解析引用编号，从 storage 提取元数据，生成引用来源列表。
     Args:
         full_reply: LLM 的完整回答文本
+        storage_key: 引用存储 key
     Returns:
-        引用来源列表 [{"id": 1, "title": "...", "file_name": "..."}, ...]
+        引用来源列表 [{"id": 1, "title": "...", "file_name": "...", "chunk_idx": 0}, ...]
     """
-    ctx = get_citation_ctx()
-    if ctx is None or not ctx["map"]:
+    storage = get_storage(storage_key)
+    if storage is None or not storage["map"]:
         return []
 
     # 匹配正文中所有 [n] 形式的引用编号
     cited_ids = set()
     for m in re.finditer(r'\[(\d+)\]', full_reply):
         cid = int(m.group(1))
-        if cid in ctx["map"]:
+        if cid in storage["map"]:
             cited_ids.add(cid)
 
     if not cited_ids:
-        # 如果 LLM 没有使用任何引用，但工具被调用过，
-        # 则展示所有检索到的文档作为参考（给用户提供线索）
-        cited_ids = set(ctx["map"].keys())
+        cited_ids = set(storage["map"].keys())
 
     items = []
     for cid in sorted(cited_ids):
-        meta = ctx["map"][cid]
+        meta = storage["map"][cid]
         items.append({
             "id": cid,
             "title": meta["title"],
-            "file_name": meta["file_name"],
+            "file_name": meta.get("file_name", ""),
+            "chunk_idx": meta.get("chunk_idx", 0),
         })
 
     return items
@@ -183,7 +183,8 @@ async def chat_stream_impl(
                 return
 
             # ── 5.5 初始化引用上下文 ────────────────────────
-            init_citation_ctx()
+            init_storage(session_id)
+            set_session_key(session_id)
 
             # ── 6. ReAct 图执行（流式） ──
             # 设置追踪上下文，cost tracking callback 据此记录 token/成本
@@ -196,7 +197,8 @@ async def chat_stream_impl(
                         yield f"data: {json.dumps({'type': 'content', 'content': chunk}, ensure_ascii=False)}\n\n"
 
             # ── 6.5 生成引用来源 ──────────────────────────
-            citation_items = _build_citations(full_reply)
+            citation_items = _build_citations(full_reply, session_id)
+            cleanup_storage(session_id)
             if citation_items:
                 yield f"data: {json.dumps({'type': 'citations', 'items': citation_items}, ensure_ascii=False)}\n\n"
 

@@ -1,10 +1,10 @@
 import { CopyOutlined, LeftOutlined, LogoutOutlined, PauseCircleOutlined, PlusOutlined, RedoOutlined, RightOutlined, SendOutlined } from '@ant-design/icons'
-import { Button, Dropdown, Input, List, message } from 'antd'
+import { Button, Dropdown, Input, List, message, Modal, Spin } from 'antd'
 import type React from 'react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { getHistory, getSessions, sendMessageStream } from './api'
+import { fetchPolicyDoc, getHistory, getSessions, sendMessageStream } from './api'
 import './App.css'
 import Login from './Login'
 
@@ -13,6 +13,7 @@ interface CitationItem {
   id: number
   title: string
   file_name: string
+  chunk_idx: number
 }
 
 // 消息类型
@@ -45,6 +46,14 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // 侧边栏收起
   const msgEndRef = useRef<HTMLDivElement>(null)                // 用于自动滚到底部
   const abortRef = useRef<AbortController | null>(null)         // 用于中断请求
+  const policyModalRef = useRef<HTMLDivElement>(null)           // 政策弹窗内容区
+
+  // 政策原文弹窗状态
+  const [policyModalOpen, setPolicyModalOpen] = useState(false)
+  const [policyContent, setPolicyContent] = useState('')
+  const [policySections, setPolicySections] = useState<{ title: string; line: number }[]>([])
+  const [policyActiveSectionIdx, setPolicyActiveSectionIdx] = useState(-1)
+  const [policyLoading, setPolicyLoading] = useState(false)
 
   // 登录后 / token 变化时获取会话列表
   useEffect(() => {
@@ -64,6 +73,46 @@ function App() {
   useEffect(() => {
     msgEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // 政策弹窗打开后，自动滚动到对应章节并高亮
+  useEffect(() => {
+    if (policyModalOpen && policyActiveSectionIdx >= 0 && policyActiveSectionIdx < policySections.length) {
+      const timer = setTimeout(() => {
+        const sectionTitle = policySections[policyActiveSectionIdx].title
+        const container = policyModalRef.current
+        if (!container) return
+        const h2Elements = Array.from(container.querySelectorAll('h2'))
+        for (const h2 of h2Elements) {
+          if (h2.textContent?.trim() === sectionTitle) {
+            h2.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            h2.classList.add('policy-section-highlight')
+            setTimeout(() => h2.classList.remove('policy-section-highlight'), 2000)
+            break
+          }
+        }
+      }, 200)
+      return () => clearTimeout(timer)
+    }
+  }, [policyModalOpen, policyContent, policyActiveSectionIdx, policySections])
+
+  // 打开政策原文弹窗
+  async function openPolicyModal(citation: CitationItem) {
+    if (!citation.file_name) return
+    setPolicyLoading(true)
+    setPolicyModalOpen(true)
+    setPolicyContent('')
+    setPolicyActiveSectionIdx(citation.chunk_idx ?? -1)
+    try {
+      const data = await fetchPolicyDoc(citation.file_name)
+      setPolicyContent(data.content)
+      setPolicySections(data.sections)
+    } catch {
+      message.error('无法加载政策原文')
+      setPolicyModalOpen(false)
+    } finally {
+      setPolicyLoading(false)
+    }
+  }
 
   // 加载会话列表
   async function loadSessions() {
@@ -268,11 +317,16 @@ function App() {
             title={title}
             onClick={() => {
               if (!hasCitation) return
-              const el = document.getElementById(`citation-src-${cid}`)
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                el.classList.add('citation-highlight')
-                setTimeout(() => el.classList.remove('citation-highlight'), 2500)
+              const citation = msg.citations?.find(c => c.id === cid)
+              if (citation?.file_name && citation.chunk_idx !== undefined) {
+                openPolicyModal(citation)
+              } else {
+                const el = document.getElementById(`citation-src-${cid}`)
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  el.classList.add('citation-highlight')
+                  setTimeout(() => el.classList.remove('citation-highlight'), 2500)
+                }
               }
             }}
           >
@@ -407,12 +461,17 @@ function App() {
                   {/* 引用来源卡片 */}
                   {msg.citations && msg.citations.length > 0 && (
                     <div className="citation-card">
-                      <div className="citation-card-title">引用来源</div>
+                      <div className="citation-card-title"><strong>引用来源——点击下方引用卡片查看政策文档详情</strong></div>
                       {msg.citations.map(c => (
                         <div
                           key={c.id}
                           id={`citation-src-${c.id}`}
-                          className="citation-item"
+                          className="citation-item citation-clickable"
+                          onClick={() => {
+                            if (c.file_name && c.chunk_idx !== undefined) {
+                              openPolicyModal(c)
+                            }
+                          }}
                         >
                           <span className="citation-id">[{c.id}]</span>
                           <span className="citation-title">{c.title}</span>
@@ -466,6 +525,27 @@ function App() {
         </div>
         <div className="input-hint">Enter发送，Shift+Enter换行</div>
       </div>
+
+      {/* 政策原文弹窗 */}
+      <Modal
+        title="政策原文"
+        open={policyModalOpen}
+        onCancel={() => setPolicyModalOpen(false)}
+        footer={null}
+        width={700}
+        className="policy-modal"
+        destroyOnHidden
+      >
+        <div className="policy-modal-body" ref={policyModalRef}>
+          {policyLoading ? (
+            <div style={{ textAlign: 'center', padding: 40 }}>
+              <Spin tip="加载中..." />
+            </div>
+          ) : (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{policyContent}</ReactMarkdown>
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }

@@ -11,7 +11,7 @@ from tools.citation import format_and_record
 
 
 @tool
-def simple_retrieve_policy(query: str) -> str:
+async def simple_retrieve_policy(query: str) -> str:
     """搜索公司政策文档，回答用户关于政策、规定、制度的问题。
     用于简单的或简单口语化的用户问题，对问题进行简单的直接改写 或者 HyDE 改写作为参数传入即可
     Args:
@@ -22,7 +22,7 @@ def simple_retrieve_policy(query: str) -> str:
     return format_and_record(results)
 
 @tool
-def es_retrieve_policy(query: str) -> str:
+async def es_retrieve_policy(query: str) -> str:
     """搜索公司政策文档，回答用户关于政策、规定、制度问题。
     用于复杂、需要跨多个文档搜索的用户问题，仅做 ES 检索（关键词）。
     你需要先调用工具，查看 BM25 改写指导.txt
@@ -34,7 +34,7 @@ def es_retrieve_policy(query: str) -> str:
     return format_and_record(results)
 
 @tool
-def complex_retrieve_policy(vec_queries: list, bm25_query: str) -> str:
+async def complex_retrieve_policy(vec_queries: list, bm25_query: str) -> str:
     """搜索公司政策文档，回答用户关于政策、规定、制度的问题。
     用于复杂的、需要跨多个文档搜索的用户问题，包含向量检索和 ES 检索（关键词）。
     你需要先调用工具，查看 多Query改写指导.txt 和 BM25 改写指导.txt

@@ -20,7 +20,7 @@ export async function sendMessageStream(
   onEnd: (sessionId: string) => void,
   onError: (error: string) => void,
   signal?: AbortSignal,
-  onCitations?: (items: {id: number, title: string, file_name: string}[]) => void
+  onCitations?: (items: {id: number, title: string, file_name: string, chunk_idx: number}[]) => void
 ) {
   const res = await fetch(`${API_BASE}/chat`, {
     method: 'POST',
@@ -89,4 +89,13 @@ export async function getSessions() {
   })
   if (!res.ok) throw new Error(`请求失败: ${res.status}`)
   return res.json()
+}
+
+// 获取政策原文（用于引用弹出查看）
+export async function fetchPolicyDoc(fileName: string) {
+  const res = await fetch(`${API_BASE}/policy/${encodeURIComponent(fileName)}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
+  })
+  if (!res.ok) throw new Error(`请求失败: ${res.status}`)
+  return res.json() as Promise<{ content: string; sections: { title: string; line: number }[] }>
 }

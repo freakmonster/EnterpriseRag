@@ -698,6 +698,15 @@
   color: var(--text);
 }
 
+.citation-clickable {
+  cursor: pointer;
+}
+
+.citation-clickable:hover {
+  background: var(--accent-light);
+  border-radius: 3px;
+}
+
 /* 引用高亮动画 */
 .citation-highlight {
   animation: citationPulse 2.5s ease-out;
@@ -712,6 +721,117 @@
   }
   100% {
     background: transparent;
+  }
+}
+
+/* ========== 政策原文弹窗 ========== */
+.policy-modal .ant-modal-body {
+  padding: 16px 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.policy-modal .ant-modal-header {
+  border-bottom: 1px solid var(--border-light);
+  padding: 16px 24px;
+}
+
+.policy-modal .ant-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.policy-modal-body {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text);
+}
+
+.policy-modal-body h1 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 16px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+}
+
+.policy-modal-body h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 20px 0 10px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+  color: var(--text);
+}
+
+.policy-modal-body h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 14px 0 8px;
+  color: var(--text-secondary);
+}
+
+.policy-modal-body p {
+  margin: 6px 0;
+}
+
+.policy-modal-body ul,
+.policy-modal-body ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.policy-modal-body li {
+  margin: 3px 0;
+}
+
+.policy-modal-body strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.policy-modal-body hr {
+  border: none;
+  border-top: 1px dashed var(--border);
+  margin: 16px 0;
+}
+
+.policy-modal-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.policy-modal-body th,
+.policy-modal-body td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.policy-modal-body th {
+  background: var(--bg);
+  font-weight: 600;
+}
+
+/* 政策章节高亮动画 */
+.policy-section-highlight {
+  animation: policySectionPulse 2s ease-out;
+}
+
+@keyframes policySectionPulse {
+  0% {
+    background: rgba(220, 38, 38, 0.15);
+  }
+  40% {
+    background: rgba(220, 38, 38, 0.1);
+  }
+  100% {
+    background: var(--bg);
   }
 }
 

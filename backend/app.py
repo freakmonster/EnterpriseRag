@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from config.settings import settings
-from api.routers import chat, webhook, auth, admin
+from api.routers import chat, webhook, auth, admin, policy
 
 
 @asynccontextmanager
@@ -22,6 +22,7 @@ app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(webhook.router, prefix="/api", tags=["webhook"])
 app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
+app.include_router(policy.router, prefix="/api", tags=["policy"])
 
 # 静态文件 (Dashboard) — 挂到 /dashboard，避免与 /admin API 冲突
 _static_dir = str(Path(__file__).parent / "static")
