@@ -1,0 +1,172 @@
+[
+  {
+    "query": "公司给员工发股票期权吗？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无股票期权相关内容"
+  },
+  {
+    "query": "公司有健身房吗？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无健身设施相关内容"
+  },
+  {
+    "query": "员工的年终奖一般是几个月工资？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无年终奖具体金额"
+  },
+  {
+    "query": "公司团建活动多久组织一次？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无团建频率规定"
+  },
+  {
+    "query": "公司允许员工远程办公吗？一周可以远程几天？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无远程办公制度"
+  },
+  {
+    "query": "产假有多少天？陪产假有多少天？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无产假/陪产假规定"
+  },
+  {
+    "query": "公司提供午餐补贴吗？有没有食堂？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无午餐补贴/食堂"
+  },
+  {
+    "query": "员工买车有购车补贴吗？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无购车补贴"
+  },
+  {
+    "query": "公司每年发多少过节费？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无过节费规定"
+  },
+  {
+    "query": "公司有没有员工宿舍？住宿费怎么算？",
+    "type": "out_of_kb",
+    "expected_behavior": "refuse",
+    "description": "政策库中无宿舍相关内容"
+  },
+  {
+    "query": "年假有几天？满一年和满五年分别是多少？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "04_休假管理规定"
+    ]
+  },
+  {
+    "query": "迟到怎么处理？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "01_办公行为规范"
+    ]
+  },
+  {
+    "query": "出差住宿标准是多少？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "03_差旅报销制度"
+    ]
+  },
+  {
+    "query": "绩效考核的等级有哪些？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "07_绩效考核制度"
+    ]
+  },
+  {
+    "query": "公司的福利待遇包括哪些？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "06_薪酬福利制度"
+    ]
+  },
+  {
+    "query": "高温津贴什么时候发放？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "06_薪酬福利制度"
+    ]
+  },
+  {
+    "query": "个人信息处理需要遵守什么原则？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "09_数据保护与隐私合规管理办法"
+    ]
+  },
+  {
+    "query": "旷工怎么扣工资？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "01_办公行为规范"
+    ]
+  },
+  {
+    "query": "公司对信息安全有什么要求？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "05_信息安全规范"
+    ]
+  },
+  {
+    "query": "办公区域可以带宠物吗？",
+    "type": "factual",
+    "expected_behavior": "answer",
+    "relevant_files": [
+      "01_办公行为规范"
+    ]
+  },
+  {
+    "query": "根据公司制度，员工的股票分红是每年发放还是按月发放？",
+    "type": "trap",
+    "expected_behavior": "refuse",
+    "description": "前提假设有股票分红，库中无此制度"
+  },
+  {
+    "query": "公司规定周六加班费是平时的1.5倍还是2倍？",
+    "type": "trap",
+    "expected_behavior": "refuse",
+    "description": "前提假设有加班费倍数，可能未在政策中出现"
+  },
+  {
+    "query": "按照公司的育儿假政策，一胎和二胎各放多少天？",
+    "type": "trap",
+    "expected_behavior": "refuse",
+    "description": "前提假设有育儿假，库中无此内容"
+  },
+  {
+    "query": "公司的学习补贴每人每年最多可以报多少？",
+    "type": "trap",
+    "expected_behavior": "refuse",
+    "description": "前提假设有学习补贴，可能无此内容"
+  },
+  {
+    "query": "根据制度，员工子女教育津贴每个孩子每月多少钱？",
+    "type": "trap",
+    "expected_behavior": "refuse",
+    "description": "前提假设有子女教育津贴，库中不存在"
+  }
+]

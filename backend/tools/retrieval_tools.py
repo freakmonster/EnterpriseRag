@@ -55,7 +55,7 @@ def _track_rerank(response):
     track_embedding(
         user_id=ctx["user_id"],
         session_id=ctx.get("session_id") or "",
-        model_name="qwen3-vl-rerank",
+        model_name="gte-rerank-v2",
         model_type="rerank",
         node_type="query",
         input_tokens=usage.input_tokens or 0,
@@ -76,17 +76,24 @@ def multi_retrieve_v2(vec_queries, bm25_query, retrieve_top_k=10, rerank_top_k=2
             # 用该query精排
             doc_texts = [doc["content"] for doc in vec_results]
             response = TextReRank.call(
-                model="qwen3-vl-rerank",
+                model="gte-rerank-v2",
                 query=query,
                 documents=doc_texts,
                 top_n=2,
                 api_key=settings.dashscope_api_key,
             )
-            _track_rerank(response)
-            for result in response.output.results:
-                idx = result.index
-                if idx < len(vec_results):
-                    doc = vec_results[idx]
+            if response and response.output:
+                _track_rerank(response)
+                for result in response.output.results:
+                    idx = result.index
+                    if idx < len(vec_results):
+                        doc = vec_results[idx]
+                        key = (doc["metadata"]["file_name"], doc["metadata"]["chunk_idx"])
+                        if key not in seen:
+                            seen.add(key)
+                            merged_docs.append(doc)
+            else:
+                for doc in vec_results[:2]:
                     key = (doc["metadata"]["file_name"], doc["metadata"]["chunk_idx"])
                     if key not in seen:
                         seen.add(key)
@@ -97,17 +104,24 @@ def multi_retrieve_v2(vec_queries, bm25_query, retrieve_top_k=10, rerank_top_k=2
     if es_results:
         doc_texts = [doc["content"] for doc in es_results]
         response = TextReRank.call(
-            model="qwen3-vl-rerank",
+            model="gte-rerank-v2",
             query=vec_queries[0],
             documents=doc_texts,
             top_n=2,
             api_key=settings.dashscope_api_key,
         )
-        _track_rerank(response)
-        for result in response.output.results:
-            idx = result.index
-            if idx < len(es_results):
-                doc = es_results[idx]
+        if response and response.output:
+            _track_rerank(response)
+            for result in response.output.results:
+                idx = result.index
+                if idx < len(es_results):
+                    doc = es_results[idx]
+                    key = (doc["metadata"]["file_name"], doc["metadata"]["chunk_idx"])
+                    if key not in seen:
+                        seen.add(key)
+                        merged_docs.append(doc)
+        else:
+            for doc in es_results[:2]:
                 key = (doc["metadata"]["file_name"], doc["metadata"]["chunk_idx"])
                 if key not in seen:
                     seen.add(key)

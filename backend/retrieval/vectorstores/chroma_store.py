@@ -4,6 +4,7 @@
 from typing import List, Optional
 
 import chromadb
+import dashscope as _dashscope
 from dashscope.rerank.text_rerank import TextReRank
 from llama_index.core import VectorStoreIndex, Settings
 from llama_index.core.schema import TextNode
@@ -31,7 +32,7 @@ def _track_rerank_inline(response):
     track_embedding(
         user_id=ctx["user_id"],
         session_id=ctx.get("session_id") or "",
-        model_name="qwen3-vl-rerank",
+        model_name="gte-rerank-v2",
         model_type="rerank",
         node_type="query",
         input_tokens=usage.input_tokens or 0,
@@ -51,6 +52,17 @@ def _track_embedding_inline(model_name: str, query_len: int):
         node_type="query",
         input_tokens=query_len,  # 粗略估算
     )
+
+
+def _get_text_embedding(text: str) -> List[float]:
+    """直接调用 DashScope API 生成 embedding，绕过 LlamaIndex instrumentation 避免 Pydantic v2 校验错误"""
+    _dashscope.api_key = app_settings.dashscope_api_key
+    response = _dashscope.TextEmbedding.call(
+        model=app_settings.dashscope_embedding_model,
+        input=text,
+    )
+    return response.output['embeddings'][0]['embedding']
+
 
 # ChromaDB 持久化客户端
 _chroma_client = chromadb.PersistentClient(path=app_settings.chroma_db_path)
@@ -161,7 +173,7 @@ def search(query: str, top_k: int = 5, is_gray: Optional[bool] = None) -> List[d
         is_gray = gray_config.is_gray_traffic()
 
     where = _build_where_clause(is_gray)
-    query_embedding = Settings.embed_model.get_text_embedding(query)
+    query_embedding = _get_text_embedding(query)
     _track_embedding_inline("text-embedding-v2", len(query))
 
     results = _collection.query(
@@ -177,24 +189,30 @@ def search(query: str, top_k: int = 5, is_gray: Optional[bool] = None) -> List[d
         return []
 
     response = TextReRank.call(
-        model="qwen3-vl-rerank",
+        model="gte-rerank-v2",
         query=query,
         documents=doc_texts,
         top_n=min(top_k, len(doc_texts)),
         api_key=app_settings.dashscope_api_key,
     )
-    _track_rerank_inline(response)
 
-    reranked = []
-    for result in response.output.results:
-        idx = result.index
-        if idx < len(doc_texts):
-            reranked.append({
-                "content": doc_texts[idx],
-                "metadata": doc_metadatas[idx],
-            })
-
-    return reranked[:top_k]
+    if response and response.output:
+        _track_rerank_inline(response)
+        reranked = []
+        for result in response.output.results:
+            idx = result.index
+            if idx < len(doc_texts):
+                reranked.append({
+                    "content": doc_texts[idx],
+                    "metadata": doc_metadatas[idx],
+                })
+        return reranked[:top_k]
+    else:
+        # Rerank 失败时降级返回向量初排结果
+        return [
+            {"content": text, "metadata": meta}
+            for text, meta in zip(doc_texts, doc_metadatas)
+        ][:top_k]
 
 
 def search_no_rerank(query: str, top_k: int = 5, is_gray: Optional[bool] = None) -> List[dict]:
@@ -208,7 +226,7 @@ def search_no_rerank(query: str, top_k: int = 5, is_gray: Optional[bool] = None)
         is_gray = gray_config.is_gray_traffic()
 
     where = _build_where_clause(is_gray)
-    query_embedding = Settings.embed_model.get_text_embedding(query)
+    query_embedding = _get_text_embedding(query)
     _track_embedding_inline("text-embedding-v2", len(query))
 
     results = _collection.query(

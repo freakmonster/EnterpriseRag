@@ -2,6 +2,15 @@
 Elasticsearch 索引管理：创建索引、文档入库、删除索引
 支持 is_gray 元数据字段区分线上/灰度数据
 """
+import ssl as _ssl
+_orig_load_certs = _ssl.SSLContext.load_default_certs
+def _safe_load_certs(self, purpose=_ssl.Purpose.SERVER_AUTH):
+    try:
+        return _orig_load_certs(self, purpose)
+    except _ssl.SSLError:
+        pass
+_ssl.SSLContext.load_default_certs = _safe_load_certs
+
 from typing import List, Optional
 from elasticsearch import Elasticsearch
 from config.settings import settings as app_settings
@@ -146,8 +155,8 @@ def get_all_es_indices(es_client: Elasticsearch) -> list:
 if __name__ == "__main__":
     # all_indices = get_all_es_indices(es)
     # print("ES中所有索引：", all_indices)
-    # create_index()
-    # insert_chunks()
+    create_index()
+    insert_chunks()
     # delete_index("policy_chunks")
     count = es.count(index=INDEX_NAME)["count"]
     print(f"\n验证: ES 索引中有 {count} 个文档")

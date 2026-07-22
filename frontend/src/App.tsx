@@ -365,7 +365,20 @@ function App() {
         {/* 消息区域 */}
         <div className="chat-messages">
           {messages.length === 0 && (
-            <div className="empty-tip">输入问题开始对话</div>
+            <div className="empty-state">
+              <div className="empty-tip">输入问题开始对话</div>
+              <div className="suggestions">
+                {["年假有几天？满一年和满五年分别是多少？", "迟到和旷工会怎么处理？", "绩效考核的等级有哪些？绩效奖金怎么算？", "出差住宿标准是多少？怎么报销？", "公司的福利待遇包括哪些？", "入职流程是怎样的？", "个人敏感信息有什么保护规定？", "员工培训有哪些？培训费用谁出？"].map((s) => (
+                  <span
+                    key={s}
+                    className="suggestion-chip"
+                    onClick={() => { setInput(s); handleSend(); }}
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
           {messages.map((msg) => (
             <div key={msg.id} className={`msg-row ${msg.role === 'USER' ? 'user' : 'assistant'}`}>
