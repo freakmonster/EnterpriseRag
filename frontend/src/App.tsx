@@ -1,8 +1,9 @@
-import { CopyOutlined, LeftOutlined, LogoutOutlined, PauseCircleOutlined, PlusOutlined, RedoOutlined, RightOutlined, SendOutlined } from '@ant-design/icons'
+﻿import { CopyOutlined, LeftOutlined, LogoutOutlined, PauseCircleOutlined, PlusOutlined, RedoOutlined, RightOutlined, SendOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Input, List, message, Modal, Spin } from 'antd'
 import type React from 'react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 import { fetchPolicyDoc, getHistory, getSessions, sendMessageStream } from './api'
 import './App.css'
@@ -174,7 +175,6 @@ function App() {
     setInput('')
 
     try {
-      let finalSessionId = activeSession
       await sendMessageStream(
         text,
         activeSession || undefined,
@@ -188,7 +188,6 @@ function App() {
           }))
         },
         (sessionId) => {
-          finalSessionId = sessionId
           if (!activeSession) {
             setActiveSession(sessionId)
             loadSessions()
@@ -299,43 +298,47 @@ function App() {
   }
 
   // 渲染带引用标记的消息内容
-  // 将正文中的 [n] 渲染为上标引用标记，其他部分正常用 ReactMarkdown
+  // 将正文中的 [n] 渲染为上标引用标记，内联在文本中
   function renderContent(msg: ChatMsg): ReactNode {
-    const content = msg.content
-    // 分割正文，将 [n] 和普通文本交替渲染
-    const parts = content.split(/(\[\d+\])/g)
-    return parts.map((part, i) => {
-      const match = part.match(/^\[(\d+)\]$/)
-      if (match) {
-        const cid = parseInt(match[1])
-        const hasCitation = msg.citations?.some(c => c.id === cid)
-        const title = hasCitation ? '跳转到引用来源' : ''
-        return (
-          <sup
-            key={i}
-            className={`citation-ref ${hasCitation ? 'clickable' : ''}`}
-            title={title}
-            onClick={() => {
-              if (!hasCitation) return
-              const citation = msg.citations?.find(c => c.id === cid)
-              if (citation?.file_name && citation.chunk_idx !== undefined) {
-                openPolicyModal(citation)
-              } else {
-                const el = document.getElementById(`citation-src-${cid}`)
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                  el.classList.add('citation-highlight')
-                  setTimeout(() => el.classList.remove('citation-highlight'), 2500)
-                }
-              }
-            }}
-          >
-            [{cid}]
-          </sup>
-        )
-      }
-      return <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>{part}</ReactMarkdown>
-    })
+    // 预处理：将 [n] 替换为自定义内联标签 <cite-ref>，使 ReactMarkdown 在同一个 <p> 内渲染
+    const processed = msg.content.replace(/\[(\d+)\]/g, '<cite-ref id="$1">[$1]</cite-ref>')
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          'cite-ref': ({ id }: { id: string }) => {
+            const cid = parseInt(id)
+            const hasCitation = msg.citations?.some(c => c.id === cid)
+            const title = hasCitation ? '跳转到引用来源' : ''
+            return (
+              <sup
+                className={`citation-ref ${hasCitation ? 'clickable' : ''}`}
+                title={title}
+                onClick={() => {
+                  if (!hasCitation) return
+                  const citation = msg.citations?.find(c => c.id === cid)
+                  if (citation?.file_name && citation.chunk_idx !== undefined) {
+                    openPolicyModal(citation)
+                  } else {
+                    const el = document.getElementById(`citation-src-${cid}`)
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                      el.classList.add('citation-highlight')
+                      setTimeout(() => el.classList.remove('citation-highlight'), 2500)
+                    }
+                  }
+                }}
+              >
+                [{cid}]
+              </sup>
+            )
+          }
+        } as any}
+      >
+        {processed}
+      </ReactMarkdown>
+    )
   }
 
   // 登录处理
