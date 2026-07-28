@@ -42,6 +42,8 @@ os.environ["CHROMA_SKIP_TELEMETRY"] = "true"
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from config.settings import settings
+
 from models.llm_providers.deepseek_client import create_llm
 from models.prompts.system_prompts import SYSTEM_PROMPT
 from agents.workflows.support_agent import agent_graph
@@ -231,7 +233,7 @@ async def run_group_c(cases: List[Dict]) -> List[Dict]:
 
         try:
             final_state = await agent_graph.ainvoke(
-                initial_state, config={"recursion_limit": 8}
+                initial_state, config={"recursion_limit": settings.agent_recursion_limit}
             )
             answer = final_state["messages"][-1].content
         except Exception as e:
@@ -261,7 +263,7 @@ async def run_group_d(cases: List[Dict]) -> List[Dict]:
 
         try:
             final_state = await agent_graph.ainvoke(
-                initial_state, config={"recursion_limit": 8}
+                initial_state, config={"recursion_limit": settings.agent_recursion_limit}
             )
             answer = final_state["messages"][-1].content
         except Exception as e:

@@ -13,6 +13,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from models.llm_providers.deepseek_client import create_llm
 from models.prompts.system_prompts import SYSTEM_PROMPT, SESSION_TITLE_PROMPT
 from config.constants import SESSION_TITLE_MAX_LEN, MEMORY_COMPRESS_THRESHOLD
+from config.settings import settings
 from services.guard import check_message
 from services.memory import compress_memory_async
 from services.security import _tracking_ctx
@@ -189,7 +190,7 @@ async def chat_stream_impl(
             # ── 6. ReAct 图执行（流式） ──
             # 设置追踪上下文，cost tracking callback 据此记录 token/成本
             _tracking_ctx.set({"user_id": userId, "session_id": session_id, "node_type": "agent"})
-            async for event in agent_graph.astream_events(initial_state, version="v2", config={"recursion_limit": 15}):
+            async for event in agent_graph.astream_events(initial_state, version="v2", config={"recursion_limit": settings.agent_recursion_limit}):
                 if event["event"] == "on_chat_model_stream":
                     chunk = event["data"]["chunk"].content
                     if chunk:

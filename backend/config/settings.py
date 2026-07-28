@@ -68,5 +68,8 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_days: int = 7
 
+    # Agent 递归次数上限（防止 ReAct 循环无限调用工具）
+    agent_recursion_limit: int = int(os.getenv("AGENT_RECURSION_LIMIT", "15"))
+
 
 settings = Settings()

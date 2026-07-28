@@ -80,3 +80,5 @@ docs/
 .claude
 CLAUDE.md
 .codegraph
+
+*.md
