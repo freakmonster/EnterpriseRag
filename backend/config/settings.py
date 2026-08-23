@@ -4,10 +4,15 @@ import os
 from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
 
 
 # 项目根目录：agent-service/ 目录
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+
+# 加载 .env 配置文件（backend/.env）
+# override=False：真实系统环境变量优先级更高，.env 只补充缺失项
+load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 
 class Settings(BaseSettings):
@@ -43,7 +48,7 @@ class Settings(BaseSettings):
     db_name: str = os.getenv("DB_NAME", "db_ea")
 
     # Redis数据库配置
-    redis_host: str = os.getenv("REDIS_HOST", "172.22.32.238")
+    redis_host: str = os.getenv("REDIS_HOST", "127.0.0.1")
     redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
     redis_password: str = os.getenv("REDIS_PASSWORD", "")
     redis_db: int = int(os.getenv("REDIS_DB", "0"))

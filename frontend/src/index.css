@@ -1,61 +1,341 @@
-/* 全局 — 企业员工助手 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
+/* =====================================================
+   全局样式 — 公司职员智能助手（重构版）
+   设计语言：现代 AI 助手风格（参考 ChatGPT / Claude / Copilot）
+   主色：靛蓝→紫罗兰 渐变，支持明暗双主题
+   ===================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
 
+/* ---------- 设计令牌（浅色） ---------- */
 :root {
-  --bg: #fdf6f6;
+  --bg: #f6f7fb;
   --surface: #ffffff;
-  --surface-hover: #f5eded;
-  --sidebar-bg: #f9ebeb;
-  --border: #e8dcdc;
-  --border-light: #f5efef;
-  --text: #1a1d23;
-  --text-secondary: #5f6b7a;
-  --text-muted: #8f99a8;
-  --accent: #dc2626;
-  --accent-light: #fce8e8;
-  --accent-glow: rgba(220,38,38,.10);
-  --user-bubble: #dc2626;
+  --surface-2: #f1f2f8;
+  --surface-hover: #eceef7;
+  --border: #e4e7f0;
+  --border-strong: #d2d6e4;
+  --text: #171a24;
+  --text-secondary: #4d5568;
+  --text-muted: #8a92a6;
+
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --accent-3: #a855f7;
+  --accent-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #a855f7 100%);
+  --accent-soft: rgba(99, 102, 241, 0.1);
+  --accent-glow: rgba(99, 102, 241, 0.18);
+
+  --user-bubble-grad: linear-gradient(135deg, #6366f1 0%, #7c5cf0 100%);
   --user-bubble-text: #ffffff;
   --assistant-bubble: #ffffff;
-  --assistant-bubble-border: #ebdfdf;
-  --coral: #ef4444;
-  --coral-light: #fee2e2;
-  --radius-sm: 8px;
-  --radius: 14px;
-  --radius-lg: 20px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
-  --shadow: 0 2px 12px rgba(0,0,0,.06);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,.08);
-  --transition: 200ms cubic-bezier(.4,0,.2,1);
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+
+  --shadow-sm: 0 1px 3px rgba(23, 26, 36, 0.06);
+  --shadow: 0 4px 20px rgba(23, 26, 36, 0.08);
+  --shadow-lg: 0 12px 40px rgba(99, 102, 241, 0.16);
+
+  --glass: rgba(255, 255, 255, 0.72);
+  --scrollbar: #cdd2e0;
+
+  --chat-max-width: 860px;
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* ---------- 设计令牌（暗色） ---------- */
+[data-theme='dark'] {
+  --bg: #0e1017;
+  --surface: #171a24;
+  --surface-2: #1e2230;
+  --surface-hover: #232838;
+  --border: #262b3a;
+  --border-strong: #333a4d;
+  --text: #e8eaf2;
+  --text-secondary: #a7aec2;
+  --text-muted: #6b7288;
+
+  --accent: #818cf8;
+  --accent-2: #a78bfa;
+  --accent-3: #c084fc;
+  --accent-grad: linear-gradient(135deg, #818cf8 0%, #a78bfa 55%, #c084fc 100%);
+  --accent-soft: rgba(129, 140, 248, 0.16);
+  --accent-glow: rgba(129, 140, 248, 0.28);
+
+  --user-bubble-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --assistant-bubble: #171a24;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
+
+  --glass: rgba(23, 26, 36, 0.78);
+  --scrollbar: #333a4d;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
 
 body {
-  font-family: 'Inter','Noto Sans SC',-apple-system,sans-serif;
+  font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(220,38,38,.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(239,68,68,.02) 0%, transparent 50%);
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
-#root { height: 100vh; }
-
-/* 消息入场动画 */
-@keyframes msgIn {
-  from { opacity: 0; transform: translateY(12px) scale(.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+::selection {
+  background: var(--accent);
+  color: #fff;
 }
 
+/* ---------- 全局滚动条 ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ---------- 动态极光背景（登录页 + 应用内装饰） ---------- */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.aurora::before,
+.aurora::after,
+.aurora .aurora-blob {
+  content: '';
+  position: absolute;
+  width: 55vw;
+  height: 55vw;
+  min-width: 480px;
+  min-height: 480px;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.aurora .blob-1 {
+  top: -18%;
+  left: -12%;
+  background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.5), transparent 65%);
+  animation: auroraFloat 26s ease-in-out infinite alternate;
+}
+
+.aurora .blob-2 {
+  bottom: -22%;
+  right: -10%;
+  background: radial-gradient(circle at 70% 60%, rgba(168, 85, 247, 0.42), transparent 65%);
+  animation: auroraFloat 32s ease-in-out infinite alternate-reverse;
+}
+
+.aurora .blob-3 {
+  top: 40%;
+  right: 8%;
+  width: 36vw;
+  height: 36vw;
+  min-width: 320px;
+  min-height: 320px;
+  background: radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.3), transparent 65%);
+  animation: auroraFloat 38s ease-in-out infinite alternate;
+}
+
+@keyframes auroraFloat {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(6vw, -4vh) scale(1.12) rotate(30deg);
+  }
+  100% {
+    transform: translate(-4vw, 5vh) scale(0.94) rotate(-24deg);
+  }
+}
+
+/* ---------- 通用动画 ---------- */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes dotBounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0) scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1);
+  }
+}
+
+@keyframes cursorBlink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulseRing {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- 渐变文字 ---------- */
+.grad-text {
+  background: var(--accent-grad);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 6s ease infinite;
+}
+
+/* ---------- 消息入场 ---------- */
+.animate-fade-up {
+  animation: fadeUp 0.5s var(--ease-spring) backwards;
+}
+
+/* ---------- 引用高亮动画 ---------- */
+@keyframes citationPulse {
+  0% {
+    background: var(--accent-glow);
+  }
+  40% {
+    background: var(--accent-soft);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.citation-highlight {
+  animation: citationPulse 2.5s ease-out;
+}
+
+@keyframes policySectionPulse {
+  0% {
+    background: var(--accent-glow);
+  }
+  40% {
+    background: var(--accent-soft);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.policy-section-highlight {
+  animation: policySectionPulse 2s ease-out;
+  border-radius: 6px;
+}
+
+/* ---------- 骨架屏微光 ---------- */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-hover) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
 }

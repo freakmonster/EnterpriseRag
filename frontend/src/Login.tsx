@@ -1,5 +1,6 @@
-import { LockOutlined, UserOutlined } from '@ant-design/icons'
-import { Button, Input, Tabs, message } from 'antd'
+// 登录 / 注册页面（重构版）
+import { LockOutlined, SafetyCertificateOutlined, SearchOutlined, ThunderboltOutlined, UserOutlined } from '@ant-design/icons'
+import { App as AntApp, Button, Input, Tabs } from 'antd'
 import { useState } from 'react'
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 function Login({ onLogin }: Props) {
+  const { message } = AntApp.useApp()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -50,11 +52,20 @@ function Login({ onLogin }: Props) {
 
   return (
     <div className="login-page">
-      <div className="login-bg-decor" />
-      <div className="login-card">
-        <div className="login-content">
+      {/* 动态极光背景 */}
+      <div className="aurora">
+        <div className="aurora-blob blob-1" />
+        <div className="aurora-blob blob-2" />
+        <div className="aurora-blob blob-3" />
+      </div>
+
+      <div className="login-wrap">
+        <div className="login-card">
           <div className="login-brand">
-            <h1>公司职员智能助手</h1>
+            <div className="login-logo">
+              <ThunderboltOutlined />
+            </div>
+            <h1 className="grad-text">公司职员智能助手</h1>
             <p>智能检索，精准回答，让每一条公司制度触手可及</p>
           </div>
 
@@ -71,7 +82,7 @@ function Login({ onLogin }: Props) {
 
           <div className="login-form">
             <Input
-              prefix={<UserOutlined style={{color:'var(--text-muted)'}}/>}
+              prefix={<UserOutlined style={{ color: 'var(--text-muted)' }} />}
               placeholder="用户名"
               value={username}
               onChange={e => setUsername(e.target.value)}
@@ -79,7 +90,7 @@ function Login({ onLogin }: Props) {
               maxLength={20}
             />
             <Input.Password
-              prefix={<LockOutlined style={{color:'var(--text-muted)'}}/>}
+              prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
               placeholder="密码"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -88,7 +99,7 @@ function Login({ onLogin }: Props) {
             />
             {tab === 'register' && (
               <Input.Password
-                prefix={<LockOutlined style={{color:'var(--text-muted)'}}/>}
+                prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
                 placeholder="确认密码"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
@@ -103,8 +114,23 @@ function Login({ onLogin }: Props) {
               onClick={handleSubmit}
               className="login-btn"
             >
-              {tab === 'login' ? '登录' : '注册'}
+              {tab === 'login' ? '登 录' : '注 册'}
             </Button>
+          </div>
+
+          <div className="login-features">
+            <span className="login-feature">
+              <SearchOutlined className="feat-icon" />
+              智能检索
+            </span>
+            <span className="login-feature">
+              <SafetyCertificateOutlined className="feat-icon" />
+              原文溯源
+            </span>
+            <span className="login-feature">
+              <ThunderboltOutlined className="feat-icon" />
+              即问即答
+            </span>
           </div>
         </div>
       </div>

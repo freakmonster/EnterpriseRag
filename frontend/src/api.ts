@@ -22,12 +22,20 @@ export async function sendMessageStream(
   signal?: AbortSignal,
   onCitations?: (items: {id: number, title: string, file_name: string, chunk_idx: number}[]) => void
 ) {
-  const res = await fetch(`${API_BASE}/chat`, {
-    method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify({ message, sessionId: sessionId || null }),
-    signal,
-  })
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}/chat`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ message, sessionId: sessionId || null }),
+      signal,
+    })
+  } catch (e) {
+    // 用户主动中止（停止生成）不显示错误
+    if (e instanceof Error && e.name === 'AbortError') return
+    onError(e instanceof Error ? e.message : '未知错误')
+    return
+  }
 
   if (!res.ok) {
     onError(`请求失败: ${res.status}`)
@@ -66,9 +74,9 @@ export async function sendMessageStream(
         }
       }
     }
-  } catch (e: any) {
+  } catch (e) {
     // 用户主动中止不显示错误
-    if (e?.name === 'AbortError') return
+    if (e instanceof Error && e.name === 'AbortError') return
     onError(e instanceof Error ? e.message : '未知错误')
   }
 }

@@ -8,7 +8,7 @@ from tools.registry import tools
 
 def agent_node(state):
     """Agent节点：调用LLM决定下一步"""
-    llm = create_llm().bind_tools(tools)
+    llm = create_llm(temperature=0.2).bind_tools(tools)
     messages = state["messages"]
     response = llm.invoke(messages)
     return {"messages": [response]}

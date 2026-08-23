@@ -10,6 +10,8 @@ from api.routers import chat, webhook, auth, admin, policy
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # from scripts.ensure_services import ensure_services
+    # ensure_services()  # 先确保 Redis / ES 就绪（本地开发环境）
     from services.quota import seed_quota_config
     seed_quota_config()
     yield

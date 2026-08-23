@@ -22,6 +22,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -82,3 +83,14 @@ CLAUDE.md
 .codegraph
 
 *.md
+
+
+backend/scripts/
+
+backend/start-backend.ps1
+
+elasticsearch-analysis-ik-8.11.0.zip
+
+start-tunnel.ps1
+# Backup
+backup
