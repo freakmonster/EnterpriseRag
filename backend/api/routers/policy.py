@@ -1,11 +1,40 @@
 # 政策原文 API 路由
 import re
+from datetime import datetime
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
 POLICIES_DIR = Path(__file__).parent.parent.parent / "data" / "policies"
+
+
+def _parse_title(content: str, file_name: str) -> str:
+    """提取文档标题：取首个一级标题，缺失时回退为文件名（去掉编号前缀与扩展名）"""
+    for line in content.split("\n"):
+        m = re.match(r"^#\s+(.+)", line)
+        if m:
+            return m.group(1).strip()
+    return Path(file_name).stem
+
+
+@router.get("/policies")
+def list_policies():
+    """返回政策文档清单（文件名、标题、章节数、更新时间）"""
+    if not POLICIES_DIR.is_dir():
+        return {"items": []}
+    items = []
+    for file_path in sorted(POLICIES_DIR.glob("*.md")):
+        content = file_path.read_text(encoding="utf-8")
+        section_count = sum(1 for line in content.split("\n") if re.match(r"^##\s+", line))
+        mtime = datetime.fromtimestamp(file_path.stat().st_mtime)
+        items.append({
+            "file_name": file_path.stem,
+            "title": _parse_title(content, file_path.name),
+            "section_count": section_count,
+            "updated_at": mtime.strftime("%Y-%m-%d"),
+        })
+    return {"items": items}
 
 
 @router.get("/policy/{file_name:path}")
@@ -40,4 +69,4 @@ def get_policy(file_name: str):
         if m:
             sections.append({"title": m.group(1).strip(), "line": i})
 
-    return {"content": content, "sections": sections}
+    return {"content": content, "sections": sections, "title": _parse_title(content, file_path.name)}

@@ -1,33 +1,37 @@
 // 主应用 — 公司职员智能助手（重构版）
 import {
-    CheckOutlined,
-    CopyOutlined,
-    FileTextOutlined,
-    FolderOutlined,
-    LeftOutlined,
-    LogoutOutlined,
-    MessageOutlined,
-    MoonOutlined,
-    PauseCircleOutlined,
-    PlusOutlined,
-    RedoOutlined,
-    RightOutlined,
-    RobotOutlined,
-    SafetyCertificateOutlined,
-    SearchOutlined,
-    SendOutlined,
-    SunOutlined,
-    ThunderboltOutlined,
+  BarChartOutlined,
+  CheckOutlined,
+  CopyOutlined,
+  FileDoneOutlined,
+  FileTextOutlined,
+  FolderOutlined,
+  LeftOutlined,
+  LogoutOutlined,
+  MessageOutlined,
+  MoonOutlined,
+  PauseCircleOutlined,
+  PlusOutlined,
+  RedoOutlined,
+  RightOutlined,
+  RobotOutlined,
+  SafetyCertificateOutlined,
+  SearchOutlined,
+  SendOutlined,
+  SunOutlined
 } from '@ant-design/icons'
+import type { InputRef } from 'antd'
 import { App as AntApp, Button, ConfigProvider, Dropdown, Input, Modal, Spin, theme } from 'antd'
 import type React from 'react'
 import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
+import AdminPanel from './AdminPanel'
 import { fetchPolicyDoc, getHistory, getSessions, sendMessageStream } from './api'
 import './App.css'
 import Login from './Login'
+import PolicyReader from './PolicyReader'
 
 // 引用来源项类型
 interface CitationItem {
@@ -136,10 +140,14 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
   const msgEndRef = useRef<HTMLDivElement>(null)                // 用于自动滚到底部
   const abortRef = useRef<AbortController | null>(null)         // 用于中断请求
   const policyModalRef = useRef<HTMLDivElement>(null)           // 政策弹窗内容区
+  const inputRef = useRef<InputRef>(null)                         // 输入框（供文档页唤起助手时聚焦）
+  const [activePage, setActivePage] = useState<'chat' | 'docs' | 'admin'>('chat') // 当前页面：聊天 / 文档阅览 / 管理看板
+  const [textQuery, setTextQuery] = useState('')                // 文档正文搜索关键词
 
   // 政策原文弹窗状态
   const [policyModalOpen, setPolicyModalOpen] = useState(false)
   const [policyContent, setPolicyContent] = useState('')
+  const [policyTitle, setPolicyTitle] = useState('')
   const [policySections, setPolicySections] = useState<{ title: string; line: number }[]>([])
   const [policyActiveSectionIdx, setPolicyActiveSectionIdx] = useState(-1)
   const [policyLoading, setPolicyLoading] = useState(false)
@@ -204,6 +212,7 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
     try {
       const data = await fetchPolicyDoc(citation.file_name)
       setPolicyContent(data.content)
+      setPolicyTitle(data.title || '政策原文')
       setPolicySections(data.sections)
     } catch {
       message.error('无法加载政策原文')
@@ -483,6 +492,14 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
     void handleSend(text)
   }
 
+  // 从文档阅览页唤起智能助手：切回聊天页并预填问题（不自动发送）
+  function handleAskAssistant(question: string) {
+    setActivePage('chat')
+    setInput(question)
+    // 等页面切换动画结束再聚焦输入框
+    setTimeout(() => inputRef.current?.focus(), 360)
+  }
+
   // 会话列表（按关键字过滤）
   const filteredSessions = sessionQuery.trim()
     ? sessions.filter(s => s.title.toLowerCase().includes(sessionQuery.trim().toLowerCase()))
@@ -504,14 +521,83 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
             <div className="aurora-blob blob-3" />
           </div>
 
+          {/* 顶部导航条：品牌 + 页面切换 Tab + 搜索 + 主题/头像 */}
+          <nav className="top-nav">
+            <div className="top-nav-brand">
+              <div className="brand-mark sm">
+                <FileDoneOutlined />
+              </div>
+              <span className="top-nav-name">智能助手</span>
+            </div>
+            <div className="page-tabs">
+              <button
+                className={`page-tab ${activePage === 'chat' ? 'active' : ''}`}
+                onClick={() => setActivePage('chat')}
+              >
+                智能助手
+              </button>
+              <button
+                className={`page-tab ${activePage === 'docs' ? 'active' : ''}`}
+                onClick={() => setActivePage('docs')}
+              >
+                规章制度阅览
+              </button>
+              <button
+                className={`page-tab ${activePage === 'admin' ? 'active' : ''}`}
+                onClick={() => setActivePage('admin')}
+              >
+                <BarChartOutlined /> 管理看板
+              </button>
+            </div>
+            {activePage === 'docs' && (
+              <div className="top-search">
+                <Input
+                  prefix={<SearchOutlined style={{ color: 'var(--text-muted)' }} />}
+                  placeholder="搜索正文关键词…"
+                  value={textQuery}
+                  onChange={e => setTextQuery(e.target.value)}
+                  allowClear
+                />
+              </div>
+            )}
+            <div className="top-nav-right">
+              <Button
+                className="icon-btn"
+                icon={isDark ? <SunOutlined /> : <MoonOutlined />}
+                onClick={onToggleTheme}
+                title={isDark ? '切换到浅色模式' : '切换到深色模式'}
+              />
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'logout',
+                      icon: <LogoutOutlined />,
+                      label: '退出登录',
+                      onClick: handleLogout,
+                    },
+                  ],
+                }}
+                trigger={['click']}
+                placement="bottomRight"
+              >
+                <div className="user-avatar">
+                  {username.charAt(0).toUpperCase()}
+                </div>
+              </Dropdown>
+            </div>
+          </nav>
+
           <div className="app-content">
+            {/* 聊天页 */}
+            <div className={`page page-chat ${activePage !== 'chat' ? 'hidden' : ''}`}>
             {/* 左侧会话栏 */}
             <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
               <div className="sidebar-inner">
                 {/* 品牌区 */}
                 <div className="sidebar-brand">
                   <div className="brand-mark">
-                    <ThunderboltOutlined />
+                    <FileDoneOutlined />
                   </div>
                   <div className="brand-text">
                     <span className="brand-name">智能助手</span>
@@ -589,12 +675,6 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
                       </div>
                     </div>
                   </Dropdown>
-                  <Button
-                    className="icon-btn"
-                    icon={isDark ? <SunOutlined /> : <MoonOutlined />}
-                    onClick={onToggleTheme}
-                    title={isDark ? '切换到浅色模式' : '切换到深色模式'}
-                  />
                 </div>
               </div>
             </aside>
@@ -615,32 +695,6 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
                     <span className="chat-title-text">{activeTitle}</span>
                   </div>
                 </div>
-                <div className="chat-header-right">
-                  <Button
-                    className="icon-btn"
-                    icon={isDark ? <SunOutlined /> : <MoonOutlined />}
-                    onClick={onToggleTheme}
-                    title={isDark ? '切换到浅色模式' : '切换到深色模式'}
-                  />
-                  <Dropdown
-                    menu={{
-                      items: [
-                        {
-                          key: 'logout',
-                          icon: <LogoutOutlined />,
-                          label: '退出登录',
-                          onClick: handleLogout,
-                        },
-                      ],
-                    }}
-                    trigger={['click']}
-                    placement="bottomRight"
-                  >
-                    <div className="user-avatar">
-                      {username.charAt(0).toUpperCase()}
-                    </div>
-                  </Dropdown>
-                </div>
               </header>
 
               {/* 消息区域 */}
@@ -649,7 +703,7 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
                   {messages.length === 0 && (
                     <div className="empty-state">
                       <div className="welcome-logo">
-                        <ThunderboltOutlined />
+                        <FileDoneOutlined />
                       </div>
                       <div className="welcome-title grad-text">公司职员智能助手</div>
                       <div className="welcome-sub">检索公司制度，快速获得精准回答 —— 每条回答都附原文出处</div>
@@ -665,7 +719,7 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
                       <div className="suggestions">
                         {SUGGESTIONS.map(s => (
                           <span key={s} className="suggestion-chip" onClick={() => { setInput(''); handleSendWith(s) }}>
-                            <ThunderboltOutlined className="chip-icon" />
+                            <FileDoneOutlined className="chip-icon" />
                             {s}
                           </span>
                         ))}
@@ -771,6 +825,7 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
                 <div className="chat-input-box">
                   <div className="chat-input">
                     <Input.TextArea
+                      ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
@@ -793,7 +848,7 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
                   </div>
                   <div className="input-hint">
                     <span className="input-hint-left">
-                      <ThunderboltOutlined className="hint-icon" />
+                      <FileDoneOutlined className="hint-icon" />
                       智能制度检索助手
                     </span>
                     <span className="input-hint-right">Enter 发送 · Shift + Enter 换行</span>
@@ -801,11 +856,25 @@ function AppInner({ isDark, onToggleTheme }: { isDark: boolean; onToggleTheme: (
                 </div>
               </div>
             </main>
+            </div>
+
+            {/* 规章制度阅览页 */}
+            <div className={`page page-docs ${activePage !== 'docs' ? 'hidden' : ''}`}>
+              <PolicyReader
+                textQuery={textQuery}
+                onAskAssistant={handleAskAssistant}
+              />
+            </div>
+
+            {/* 管理看板页 */}
+            <div className={`page page-admin ${activePage !== 'admin' ? 'hidden' : ''}`}>
+              <AdminPanel isDark={isDark} />
+            </div>
           </div>
 
           {/* 政策原文弹窗 */}
           <Modal
-            title={<span><FileTextOutlined style={{ color: 'var(--accent)' }} /> 政策原文</span>}
+            title={<span><FileTextOutlined style={{ color: 'var(--accent)' }} /> 《{policyTitle}》政策原文</span>}
             open={policyModalOpen}
             onCancel={() => setPolicyModalOpen(false)}
             footer={null}

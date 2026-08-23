@@ -52,6 +52,22 @@ class LLMTrackingCallback(BaseCallbackHandler):
         if input_tokens == 0 and output_tokens == 0:
             return
 
+        # 提取缓存命中 / 未命中的输入 token（DeepSeek 计费区分）
+        # 兼容两种来源：deepseek 原始字段 prompt_cache_hit_tokens /
+        # prompt_cache_miss_tokens，或 OpenAI 格式 input_token_details.cache_read / cache_creation
+        details = usage.get("input_token_details") or {}
+        cache_hit = (
+            usage.get("prompt_cache_hit_tokens")
+            or details.get("cache_read")
+            or 0
+        )
+        cache_miss = (
+            usage.get("prompt_cache_miss_tokens")
+            or details.get("cache_creation")
+            or (input_tokens - cache_hit if cache_hit else input_tokens)
+            or 0
+        )
+
         self._recorded = True
         latency_ms = int((time.time() - self._start_time) * 1000)
 
@@ -65,6 +81,8 @@ class LLMTrackingCallback(BaseCallbackHandler):
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             latency_ms=latency_ms,
+            cache_hit_tokens=cache_hit,
+            cache_miss_tokens=cache_miss,
         )
 
     async def on_llm_error(self, error, **kwargs):

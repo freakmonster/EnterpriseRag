@@ -1,5 +1,5 @@
 // 登录 / 注册页面（重构版）
-import { LockOutlined, SafetyCertificateOutlined, SearchOutlined, ThunderboltOutlined, UserOutlined } from '@ant-design/icons'
+import { FileDoneOutlined, LockOutlined, SafetyCertificateOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
 import { App as AntApp, Button, Input, Tabs } from 'antd'
 import { useState } from 'react'
 
@@ -63,7 +63,7 @@ function Login({ onLogin }: Props) {
         <div className="login-card">
           <div className="login-brand">
             <div className="login-logo">
-              <ThunderboltOutlined />
+              <FileDoneOutlined />
             </div>
             <h1 className="grad-text">公司职员智能助手</h1>
             <p>智能检索，精准回答，让每一条公司制度触手可及</p>
@@ -128,7 +128,7 @@ function Login({ onLogin }: Props) {
               原文溯源
             </span>
             <span className="login-feature">
-              <ThunderboltOutlined className="feat-icon" />
+              <FileDoneOutlined className="feat-icon" />
               即问即答
             </span>
           </div>

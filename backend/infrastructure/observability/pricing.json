@@ -1,4 +1,10 @@
 {
+  "deepseek-v4-flash": {
+    "input": {"peak": 0.003, "offpeak": 0.0015},
+    "input_cache_hit": {"peak": 0.0001, "offpeak": 0.00005},
+    "output": {"peak": 0.009, "offpeak": 0.0045},
+    "unit": "per_1k_tokens"
+  },
   "hy3-preview":        {"input": 0.004, "output": 0.012, "unit": "per_1k_tokens"},
   "text-embedding-v2":  {"input": 0.0005, "output": 0.0,   "unit": "per_1k_tokens"},
   "gte-rerank-v2":    {"input": 0.003, "output": 0.0,   "unit": "per_1k_tokens"}

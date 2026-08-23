@@ -1,0 +1,35 @@
+[
+  {
+    "user_username": "uitest0823156728",
+    "leave_type": "personal",
+    "start_date": "2026-08-25",
+    "end_date": "2026-08-27",
+    "days": 3.0,
+    "reason": "家中有事需处理",
+    "status": "processing",
+    "current_approver": "分管副总",
+    "approval_progress": "已通过部门主管审核，等待分管副总审批"
+  },
+  {
+    "user_username": "admin",
+    "leave_type": "annual",
+    "start_date": "2026-05-06",
+    "end_date": "2026-05-08",
+    "days": 3.0,
+    "reason": "个人年假",
+    "status": "approved",
+    "current_approver": null,
+    "approval_progress": "已审批通过并完成人力资源部备案"
+  },
+  {
+    "user_username": "123456",
+    "leave_type": "annual",
+    "start_date": "2026-07-20",
+    "end_date": "2026-07-21",
+    "days": 1.5,
+    "reason": "个人年假",
+    "status": "approved",
+    "current_approver": null,
+    "approval_progress": "已审批通过并完成人力资源部备案"
+  }
+]

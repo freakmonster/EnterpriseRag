@@ -76,5 +76,8 @@ class Settings(BaseSettings):
     # Agent 递归次数上限（防止 ReAct 循环无限调用工具）
     agent_recursion_limit: int = int(os.getenv("AGENT_RECURSION_LIMIT", "15"))
 
+    # 个人数据工具链路开关（False 时只走 RAG 链路，可通过环境变量 ENABLE_PERSONAL_TOOLS 覆盖）
+    enable_personal_tools: bool = Field(default=True, validation_alias="ENABLE_PERSONAL_TOOLS")
+
 
 settings = Settings()

@@ -1,0 +1,38 @@
+[
+  {
+    "user_username": "uitest0823156728",
+    "role": "user",
+    "emp_no": "E1001",
+    "name": "张伟",
+    "department": "研发部",
+    "position": "前端开发工程师",
+    "rank": "P3",
+    "hire_date": "2024-06-15",
+    "workstation": "A栋3F-305",
+    "status": "active"
+  },
+  {
+    "user_username": "admin",
+    "role": "admin",
+    "emp_no": "E0001",
+    "name": "李娜",
+    "department": "人力资源部",
+    "position": "HR经理",
+    "rank": "P6",
+    "hire_date": "2019-03-01",
+    "workstation": "B栋2F-201",
+    "status": "active"
+  },
+  {
+    "user_username": "123456",
+    "role": "user",
+    "emp_no": "E1002",
+    "name": "王强",
+    "department": "市场部",
+    "position": "市场专员",
+    "rank": "P2",
+    "hire_date": "2025-03-10",
+    "workstation": "C栋5F-502",
+    "status": "active"
+  }
+]

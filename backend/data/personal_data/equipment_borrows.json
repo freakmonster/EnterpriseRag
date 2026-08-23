@@ -1,0 +1,38 @@
+[
+  {
+    "user_username": "uitest0823156728",
+    "equipment_name": "便携投影仪",
+    "borrow_time": "2026-08-20T09:30:00",
+    "due_time": "2026-08-25T17:00:00",
+    "return_time": null,
+    "status": "borrowed",
+    "deposit": 0.0
+  },
+  {
+    "user_username": "uitest0823156728",
+    "equipment_name": "联想笔记本电脑",
+    "borrow_time": "2024-06-15T10:00:00",
+    "due_time": "2027-06-15T10:00:00",
+    "return_time": null,
+    "status": "borrowed",
+    "deposit": 0.0
+  },
+  {
+    "user_username": "admin",
+    "equipment_name": "录音笔",
+    "borrow_time": "2026-08-10T14:00:00",
+    "due_time": "2026-08-13T18:00:00",
+    "return_time": "2026-08-13T17:40:00",
+    "status": "returned",
+    "deposit": 0.0
+  },
+  {
+    "user_username": "123456",
+    "equipment_name": "27寸显示器",
+    "borrow_time": "2026-08-18T09:00:00",
+    "due_time": "2026-08-28T18:00:00",
+    "return_time": null,
+    "status": "borrowed",
+    "deposit": 0.0
+  }
+]

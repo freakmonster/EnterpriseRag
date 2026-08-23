@@ -105,5 +105,105 @@ export async function fetchPolicyDoc(fileName: string) {
     headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
   })
   if (!res.ok) throw new Error(`请求失败: ${res.status}`)
-  return res.json() as Promise<{ content: string; sections: { title: string; line: number }[] }>
+  return res.json() as Promise<{ content: string; sections: { title: string; line: number }[]; title: string }>
+}
+
+// 制度文档元数据类型
+export interface PolicyDocMeta {
+  file_name: string
+  title: string
+  section_count: number
+  updated_at: string
+}
+
+// 获取制度文档清单
+export async function fetchPolicyList(): Promise<{ items: PolicyDocMeta[] }> {
+  const res = await fetch(`${API_BASE}/policies`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
+  })
+  if (!res.ok) throw new Error(`请求失败: ${res.status}`)
+  return res.json()
+}
+
+// ── 管理看板统计接口 ──────────────────────────────────
+
+// 运营总览（时段统计）
+export interface AdminOverview {
+  active_users: number
+  active_sessions: number
+  total_calls: number
+  total_cost: number
+  total_input_tokens: number
+  total_output_tokens: number
+  error_count: number
+  avg_latency_ms: number
+}
+
+// 某模型在某天的统计
+export interface AdminModelStats {
+  calls: number
+  input_tokens: number
+  output_tokens: number
+  cost: number
+  avg_latency_ms: number
+}
+
+// 趋势：按日期 + 模型类型聚合
+export interface AdminTrend {
+  days: {
+    date: string
+    models: Record<string, AdminModelStats>
+    active_users: number
+    active_sessions: number
+  }[]
+}
+
+// 聚合：每用户 / 每会话平均
+export interface AdminAggItem {
+  avg_calls: number
+  avg_input_tokens: number
+  avg_output_tokens: number
+  avg_cost: number
+  avg_latency_ms: number
+}
+
+export interface AdminAggregation {
+  per_user: AdminAggItem
+  per_session: AdminAggItem
+}
+
+// 拼装日期范围查询串（可选 from/to，格式 YYYY-MM-DD）
+function buildRangeQuery(from?: string, to?: string): string {
+  const params = new URLSearchParams()
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  const qs = params.toString()
+  return qs ? `?${qs}` : ''
+}
+
+// 运营总览统计
+export async function fetchAdminOverview(from?: string, to?: string): Promise<AdminOverview> {
+  const res = await fetch(`/admin/stats/overview${buildRangeQuery(from, to)}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
+  })
+  if (!res.ok) throw new Error(`请求失败: ${res.status}`)
+  return res.json()
+}
+
+// 趋势统计（按日）
+export async function fetchAdminTrend(from?: string, to?: string): Promise<AdminTrend> {
+  const res = await fetch(`/admin/stats/trend${buildRangeQuery(from, to)}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
+  })
+  if (!res.ok) throw new Error(`请求失败: ${res.status}`)
+  return res.json()
+}
+
+// 聚合统计（人均 / 每会话）
+export async function fetchAdminAggregation(from?: string, to?: string): Promise<AdminAggregation> {
+  const res = await fetch(`/admin/stats/aggregation${buildRangeQuery(from, to)}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
+  })
+  if (!res.ok) throw new Error(`请求失败: ${res.status}`)
+  return res.json()
 }
